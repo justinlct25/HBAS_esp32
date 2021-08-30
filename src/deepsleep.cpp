@@ -55,6 +55,7 @@ void deepsleep_handler()
 		}
 		else
 		{
+
 			int start_time = millis();
 			int time_interval = 12000;
 			int attempts = 5;
@@ -76,28 +77,34 @@ void deepsleep_handler()
 				Serial.println("Startup low battery deep sleep triggered with SUCCESS lora join");
 				wake_up_task_before_sleep(time_interval, attempts);
 				delay(2000);
-				// int sleep_time, dayOfWeek; 
-				// rtc.getYear() == 1970 ? dayOfWeek = 10 : dayOfWeek = rtc.getDayofWeek();
-				// Serial.println(dayOfWeek);
-				// switch (dayOfWeek)
-				// {
-				// 	case 0:
-				// 	case 6:
-				// 		sleep_time = 3600UL * 4;
-				// 		break;
-				// 	case 1:
-				// 	case 2:
-				// 	case 3:
-				// 	case 4:
-				// 	case 5:
-				// 	default:
-				// 		sleep_time = 3600UL;
-				// 		break;
-				// }
-				// Serial.printf("today is %i, sleep_time is: %i\r\n", rtc.getDayofWeek(), sleep_time);
-				// routine_low_battery_sleep(sleep_time);
-				routine_low_battery_sleep(long_sleep_time);
 
+				time_t now;
+				struct tm timeDetails;
+				time(&now);
+				localtime_r(&now, &timeDetails);
+				int year = timeDetails.tm_year;
+				int weekday;
+				year == 70 ? weekday = 10 : weekday = timeDetails.tm_wday;
+				Serial.printf("year: %i", year);
+				int sleep_time;
+
+				switch (weekday)
+				{
+					case 0:
+					case 6:
+						sleep_time = 3600UL * 4;
+						break;
+					case 1:
+					case 2:
+					case 3:
+					case 4:
+					case 5:
+					default:
+						sleep_time = 3600UL;
+						break;
+				}
+				Serial.printf("today is %i, sleep_time is: %i\r\n", weekday, sleep_time);
+				routine_low_battery_sleep(sleep_time);
 			} else {
 				Serial.println("Startup low battery deep sleep triggered with UNSUCCESS lora join");
 				delay(2000);
@@ -111,6 +118,7 @@ void deepsleep_handler()
 
 void deepsleep_routine()
 {
+
 	if (digitalRead(16)){
 		charge_stopped = millis();
 	}

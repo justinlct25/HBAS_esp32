@@ -75,7 +75,7 @@ void setup()
     gyro_init();
 
     //Networking initialization
-    // wifi_init();
+    wifi_init();
     //mqtt_init();
     //bt_init();
     njoinlora();

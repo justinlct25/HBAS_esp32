@@ -7,6 +7,10 @@
 #include "encode_msg.h"
 #include "buzzer.h"
 #include "wifi_c.h"
+#include <sys/time.h>
+#include <string>
+
+
 
 
 
@@ -15,7 +19,7 @@
 #define long_sleep_time  3600UL 
 // #define long_sleep_time  20UL                             // for testing
 #define lowvolt 3.5001
-// #define lowvolt 3.8001                              // for testing
+// #define lowvolt 3.8001                                       // for testing
 #define charge_interval 1000 * 60 * 10
 // #define charge_interval 1000 * 5	
 
