@@ -13,8 +13,8 @@
 #define sleeptime  3600UL 
 // #define sleeptime  20UL                             // for testing
 #define lowvolt 3.5001
-// #define lowvolt 3.8001                             // for testing
-#define charge_interval 1000 * 60 * 10
+// #define lowvolt 3.8001                              // for testing
+#define charge_interval 1000 * 60 * 30
 // #define charge_interval 1000 * 5	
 
 extern RTC_DATA_ATTR int bootCount;
