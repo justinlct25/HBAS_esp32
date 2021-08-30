@@ -104,6 +104,7 @@ void deepsleep_handler()
 						break;
 				}
 				Serial.printf("today is %i, sleep_time is: %i\r\n", weekday, sleep_time);
+				delay(2000);
 				routine_low_battery_sleep(sleep_time);
 			} else {
 				Serial.println("Startup low battery deep sleep triggered with UNSUCCESS lora join");
@@ -155,12 +156,17 @@ void lora_task_bcode_wake_up(void * parameter){
 }
 
 void wake_up_task_before_sleep(int time_limit, int try_round){
+	Serial.println("inside wake_up_task_before_sleep");
+	delay(5000);					// this is needed to ensure firm lora connection
 	xTaskCreate(lora_task_bcode_wake_up,"lora_task_b_wake_up",5000,NULL,2,&lora_task_b_wake_up);
 	umsging = true;
+
 	int start_time = millis();
 	while (umsging && millis() - start_time <= time_limit){
 		lora_rountine();
 	}
+	Serial.printf("umsging state: %i", umsging);
+	Serial.printf("sent\r\n");
 	if (umsging){
 		Serial.println("b message send fail, going to re-send");
 		for (int i = 0; i < try_round; i ++){
