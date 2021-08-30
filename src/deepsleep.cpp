@@ -4,11 +4,12 @@ RTC_DATA_ATTR int bootCount = 0;
 RTC_DATA_ATTR bool issleep = false;
 // RTC_DATA_ATTR bool issleep = true;						// test only
 RTC_DATA_ATTR bool ischarge = false;
-int start_time;
+
 
 TaskHandle_t lora_task_b_wake_up;
 void lora_task_bcode_wake_up(void *);
 
+int charge_stopped;
 
 void print_wakeup_reason()
 {
@@ -60,53 +61,78 @@ void deepsleep_handler()
 			while (!isjoin && millis() - start_time <= time_interval){
 				lora_rountine();
 			}
-			// todays edit
+
 			if (!isjoin){
 				for(int i = 0; i < attempts; i++){
 					njoinlora();
+					start_time = millis();
 					while (!isjoin && millis() - start_time <= time_interval){
 						lora_rountine();
 					}
 					if (isjoin) break;
 				}
 			}
-			wake_up_task_before_sleep(time_interval, attempts);
-			delay(2000);
+			if (isjoin) {
+				Serial.println("Startup low battery deep sleep triggered with SUCCESS lora join");
+				wake_up_task_before_sleep(time_interval, attempts);
+				delay(2000);
+				// int sleep_time, dayOfWeek; 
+				// rtc.getYear() == 1970 ? dayOfWeek = 10 : dayOfWeek = rtc.getDayofWeek();
+				// Serial.println(dayOfWeek);
+				// switch (dayOfWeek)
+				// {
+				// 	case 0:
+				// 	case 6:
+				// 		sleep_time = 3600UL * 4;
+				// 		break;
+				// 	case 1:
+				// 	case 2:
+				// 	case 3:
+				// 	case 4:
+				// 	case 5:
+				// 	default:
+				// 		sleep_time = 3600UL;
+				// 		break;
+				// }
+				// Serial.printf("today is %i, sleep_time is: %i\r\n", rtc.getDayofWeek(), sleep_time);
+				// routine_low_battery_sleep(sleep_time);
+				routine_low_battery_sleep(long_sleep_time);
 
+			} else {
+				Serial.println("Startup low battery deep sleep triggered with UNSUCCESS lora join");
+				delay(2000);
+				routine_low_battery_sleep(short_sleep_time);
+
+			}
 			//++bootCount;
-			Serial.println("Startup low battery deep sleep trigger");
-			routine_low_battery_sleep();
 		}
 	}
 }
 
 void deepsleep_routine()
 {
+	if (digitalRead(16)){
+		charge_stopped = millis();
+	}
 	if (bat < lowvolt && !digitalRead(16))
 	{
 		Serial.println("Routine low battery deep sleep trigger");
-		routine_low_battery_sleep();
+		routine_low_battery_sleep(long_sleep_time);
 	}
-	else if (bat > lowvolt && !digitalRead(16))
+	else if (bat > lowvolt && !digitalRead(16) && millis() - charge_stopped >= charge_interval )
 	{
 		Serial.println("I should buzz then sleep");
-		Serial.print("start_time: ");
-		Serial.println(start_time);
-		if (millis() - start_time >= charge_interval)
-		{
-			start_time = millis();
-			buzzer(3);
-			routine_low_battery_sleep();
-		}
+		buzzer(3);
+		routine_low_battery_sleep(long_sleep_time);
 	}
 }
 
-void routine_low_battery_sleep()
+void routine_low_battery_sleep(int sleep_time)
 {
 	issleep = true;
 	esp_sleep_enable_ext0_wakeup(GPIO_NUM_12, 1);
-	esp_sleep_enable_timer_wakeup(sleeptime * uS);
-	Serial.printf("Setup ESP32 to sleep for every %lu Seconds\r\n", sleeptime);
+	esp_sleep_enable_timer_wakeup(sleep_time * uS);
+	Serial.printf("Setup ESP32 to sleep for every %i Seconds\r\n", sleep_time);
 	Serial.flush();
 	Serial.println("Enter Deep Sleep Mode");
 	digitalWrite(17, LOW);
@@ -115,18 +141,15 @@ void routine_low_battery_sleep()
 
 void lora_task_bcode_wake_up(void * parameter){
   	Serial.println("loratask b");
-
-	Serial.println("wake up LoRa battery msg sent");
 	nsendloramsg(encode_cmsg('B'));
 	bmsging = true;
-
   	vTaskDelete(NULL);
 }
 
 void wake_up_task_before_sleep(int time_limit, int try_round){
 	xTaskCreate(lora_task_bcode_wake_up,"lora_task_b_wake_up",5000,NULL,2,&lora_task_b_wake_up);
 	umsging = true;
-	start_time = millis();
+	int start_time = millis();
 	while (umsging && millis() - start_time <= time_limit){
 		lora_rountine();
 	}
