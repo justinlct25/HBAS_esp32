@@ -22,6 +22,7 @@
 // #define lowvolt 3.8001                                       // for testing
 #define charge_interval 1000 * 60 * 20
 // #define charge_interval 1000 * 60 * 5	                        // for testing
+// #define charge_interval 1000 * 10	                        // for testing
 
 extern RTC_DATA_ATTR int bootCount;
 extern RTC_DATA_ATTR bool issleep;

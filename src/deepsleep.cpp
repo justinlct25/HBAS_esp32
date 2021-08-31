@@ -57,7 +57,7 @@ void deepsleep_handler()
 		{
 
 			int start_time = millis();
-			int time_interval = 12000;
+			int time_interval = 10000;
 			int attempts = 5;
 			while (!isjoin && millis() - start_time <= time_interval){
 				lora_rountine();
@@ -162,7 +162,8 @@ void wake_up_task_before_sleep(int time_limit, int try_round){
 	umsging = true;
 
 	int start_time = millis();
-	while (umsging && millis() - start_time <= time_limit){
+	// while (umsging ){
+	while (true && millis() - start_time <= time_limit){
 		lora_rountine();
 	}
 	Serial.printf("umsging state: %i", umsging);

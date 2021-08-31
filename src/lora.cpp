@@ -65,6 +65,7 @@ void lora_rountine(){
         //umsg
         if(strstr(input,"+MSG: Done") !=NULL || LORABUSY){
             umsging = false;
+            delay(1000);
         }
 
         //cmsg
