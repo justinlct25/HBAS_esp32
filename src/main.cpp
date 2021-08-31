@@ -22,6 +22,7 @@
 #include "deepsleep.h"
 #include "checki2c.h"
 #include "timer.h"
+#include "wifiserver.h"
 
 //core
 TaskHandle_t task1;
@@ -33,6 +34,8 @@ TaskHandle_t lora_task_a;
 void lora_task_acode(void *);
 TaskHandle_t lora_task_b;
 void lora_task_bcode(void *);
+
+
 
 //Queue record
 bool alerted = false;
@@ -79,6 +82,12 @@ void setup()
     //mqtt_init();
     //bt_init();
     njoinlora();
+
+    // get config from NVS
+    getNVSConfig();
+
+    // wifiserver
+    wifiServer_run();
 
     //core (legacy function)
     //xTaskCreatePinnedToCore(task1code,"task1",10000,NULL,0,&task1,0);
@@ -250,6 +259,13 @@ void rout_taskcode(void *parameter)
             led_operate(); //LED
             buz_operate(); //buzzer
 
+            //send websocket
+            webSocketMeasureInfo();
+            webSocketLoggerInfo();
+
+            Serial.println(lim_distance);
+            Serial.println(lim_angle);
+
             //deep sleep
             deepsleep_routine();
 
@@ -413,6 +429,7 @@ void task1code(void *parameter)
 
             led_operate(); //LED
             buz_operate(); //buzzer
+            
 
             //deep sleep
             deepsleep_routine();

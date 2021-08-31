@@ -5,8 +5,16 @@ bool isbrake = false;
 bool isalert = false;
 
 //limit parameter
+// int lim_distance = 35;
+// int lim_angle = 40; //ref: ~ 47  ref: ~105
 int lim_distance = 35;
-int lim_angle = 40; //ref: ~ 47  ref: ~105
+int lim_angle = 40;
+
+void getNVSConfig(){
+  NVS.begin();
+  lim_distance = NVS.getInt("lim_distance");
+  lim_angle = NVS.getInt("lim_angle");
+}
 
 void person()
 {

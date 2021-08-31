@@ -2,6 +2,7 @@
 #define _CHECKBOOL_H_
 
 #include <Arduino.h>
+#include <ArduinoNvs.h>
 
 extern int16_t distance;
 extern int stickrot;
@@ -18,6 +19,7 @@ extern int lim_angle;
 
 extern void buzzer();
 
+void getNVSConfig();
 void checkrot2();
 void person();
 
