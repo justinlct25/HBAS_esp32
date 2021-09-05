@@ -1,6 +1,6 @@
 #include "http.h"
 
-const char *URL = "http://192.168.1.102:88/version";
+const char *URL = "http://172.20.10.5:88/version";
 String latestVersion="";
 String result = "NC"; // NC = not connected to WiFi
 String payload = "NULL";

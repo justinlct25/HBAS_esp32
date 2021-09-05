@@ -22,6 +22,7 @@
 #include "deepsleep.h"
 #include "checki2c.h"
 #include "timer.h"
+#include "wifista_update.h"
 
 //core
 TaskHandle_t task1;
@@ -52,8 +53,6 @@ long LoraAMsginterval = 30000; //30 seconds
 unsigned long previousLoraBMsgMillis = 0;
 long LoraBMsginterval = 900000; //15 minutes
 
-unsigned long previousWifiMillis = 0;
-long Wifiinterval = 3600000; //1 hour
 
 void init();
 
@@ -97,96 +96,7 @@ void loop()
 {
     //Handle lora transmission status
     lora_rountine();
-
-    //legacy function
-    //lora alert msg
-    // if(isalert){
-    //     //tmsg=encode_fmsg("A");
-    //     //strcpy(arecord[recordCounter],tmsg.c_str());
-    //     strcpy(arecord[recordCounter],encode_cmsg('A'));
-    //     recordCounter++;
-    //     previousTimeoutMillis=millis();
-    //     while(!isbrake && timeout(previousTimeoutMillis));
-    //     alerted=true;
-    //   if(!isjoin){
-    //     //Serial.println("Not in LoRaWan. Rejoining LoRaWan...");
-    //     njoinlora();
-    //     //LoraAMsginterval = 30000;
-    //   }
-    //   else{
-    //     Serial.println("Lora alert msg sent");
-    //     //sendloracmsg(tmsg);
-    //     nsendloracmsg(arecord[recordCounter-1]);
-    //     if(isretry){
-    //       Serial.println("Retry in 30s");
-    //       alerted=true;
-    //       //LoraAMsginterval = 30000;
-    //     }
-    //     else{
-    //       Serial.println("ack received");
-    //       recordCounter--;//
-    //       if(recordCounter == 0){
-    //         alerted=false;
-    //         //LoraAMsginterval = 300000;
-    //       }
-    //       else{
-    //         LoraAMsginterval = 30000;
-    //       }
-    //     }
-    //   }
-    // }
-    //
-    // if(alerted){
-    //   unsigned long currentLoraAMSGMillis = millis();
-    //   if(currentLoraAMSGMillis - previousLoraAMsgMillis >= LoraAMsginterval){
-    //     Serial.println("LORA AMSG LOOP");
-    //     if(!isjoin){
-    //       Serial.println("Not in LoRaWan. Rejoining LoRaWan...");
-    //       njoinlora();
-    //       LoraAMsginterval = 30000;
-    //     }
-    //     if(recordCounter>0){
-    //       Serial.println("Get stored alert msg and send");
-    //       //String tmsg=arecord[recordCounter-1];
-    //       Serial.printf("Resend msg %d\r\n",recordCounter-1);
-    //       //sendloracmsg(tmsg);
-    //       sendloracmsg(arecord[recordCounter-1]);
-    //       if(isretry){
-    //         Serial.println("Retry in 30s");
-    //         LoraAMsginterval = 30000;
-    //         Serial.printf("%d records are not sent\r\n",recordCounter);
-    //       }
-    //       else{
-    //         Serial.println("ack received");
-    //         Serial.printf("msg %d sent\r\n",recordCounter-1);
-    //         recordCounter--;
-    //       }
-    //     }
-    //     else{
-    //       LoraAMsginterval = 300000;
-    //       alerted=false;
-    //     }
-    //     previousLoraAMsgMillis = currentLoraAMSGMillis;
-    //   }
-    // }
-    //
-    //lora routine battery msg
-    // unsigned long currentLoraBMSGMillis = millis();
-    // if(currentLoraBMSGMillis - previousLoraBMsgMillis >= LoraBMsginterval){
-    //   Serial.println("LORA BMSG LOOP");
-    //   //tmsg=encode_fmsg("B");
-    //   strcpy(bmsg,encode_cmsg('B'));
-    //   if(!isjoin){
-    //     //Serial.println("Not in LoRaWan. Rejoining LoRaWan...");
-    //     njoinlora();
-    //   }
-    //   else{
-    //     Serial.println("routine LoRa battery msg sent");
-    //     nsendloracmsg(bmsg);
-    //     bmsging = true;
-    //   }
-    //   previousLoraBMsgMillis = currentLoraBMSGMillis;
-    // }
+    wifista_update();
 }
 
 void init()
@@ -196,7 +106,6 @@ void init()
     digitalWrite(17, HIGH); //pull up
     pinMode(16, INPUT);     //battery charging signal
     Serial.begin(115200);
-    //very important
 }
 
 void rout_taskcode(void *parameter)
@@ -237,6 +146,11 @@ void rout_taskcode(void *parameter)
             Serial.printf("bmsg timer: %s\r\n", gettimer(previousLoraBMsgMillis));
             showlora();
 
+            // Serial.printf("before update");
+            Serial.printf("after update");
+            Serial.printf("after update");
+
+
             //mqtt monitor
             //mqttpub();
 
@@ -252,7 +166,6 @@ void rout_taskcode(void *parameter)
 
             //deep sleep
             deepsleep_routine();
-
         } //end 1s rountine
 
         //Bluetootooth routine

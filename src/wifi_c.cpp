@@ -1,7 +1,7 @@
 #include "wifi_c.h"
 
-const char *ssid = "trash";                          // "REPLACE_WITH_YOUR_SSID";
-const char *password = "12345678";                   // "REPLACE_WITH_YOUR_PASSWORD";
+const char *ssid = "Justin";                          // "REPLACE_WITH_YOUR_SSID";
+const char *password = "pppppppp";                   // "REPLACE_WITH_YOUR_PASSWORD";
 
 // these are for NTPClient connection
 WiFiUDP ntpUDP;
