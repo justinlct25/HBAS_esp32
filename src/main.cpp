@@ -23,6 +23,7 @@
 #include "checki2c.h"
 #include "timer.h"
 #include "wifista_update.h"
+#include "wifiap_server.h"
 
 //core
 TaskHandle_t task1;
@@ -78,6 +79,12 @@ void setup()
     //mqtt_init();
     //bt_init();
     njoinlora();
+
+    // get config from NVS
+    getNVSConfig();
+
+    // wifiapserver
+    wifiAPServer_init();
 
     //core (legacy function)
     //xTaskCreatePinnedToCore(task1code,"task1",10000,NULL,0,&task1,0);
@@ -146,9 +153,9 @@ void rout_taskcode(void *parameter)
             Serial.printf("bmsg timer: %s\r\n", gettimer(previousLoraBMsgMillis));
             showlora();
 
-            // Serial.printf("before update");
-            Serial.printf("after update");
-            Serial.printf("after update");
+            Serial.printf("before update");
+            // Serial.printf("after update");
+            // Serial.printf("after update");
 
 
             //mqtt monitor
@@ -163,6 +170,10 @@ void rout_taskcode(void *parameter)
             //LED & Buzzer operate
             led_operate(); //LED
             buz_operate(); //buzzer
+
+            // send websocket info
+            webSocketMeasureInfo();
+            webSocketLoggerInfo();
 
             //deep sleep
             deepsleep_routine();

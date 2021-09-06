@@ -3,7 +3,7 @@
 
 #include "http.h"
 
-#define fw_version "1.0.1"
+#define fw_version "1.0.0"
 
 extern bool islateset;
 

@@ -1,12 +1,28 @@
 #include "checkbool.h"
+#include "wifiap_server.h"
 
 bool isperson = false;
 bool isbrake = false;
 bool isalert = false;
 
-//limit parameter
+// device id
+int device_id = 3;
+
+// limit parameter
 int lim_distance = 35;
 int lim_angle = 40; //ref: ~ 47  ref: ~105
+
+void getNVSConfig(){
+  NVS.begin();
+  device_id = NVS.getInt("device_id");
+  if(device_id!=0){
+    // char chare;
+    sprintf(wifi_ap_ssid, "HbAs_%x", device_id);
+    // wifi_ap_ssid = 
+  }
+  lim_distance = NVS.getInt("lim_distance");
+  lim_angle = NVS.getInt("lim_angle");
+}
 
 void person()
 {
