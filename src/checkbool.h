@@ -16,6 +16,7 @@ extern bool isextmpu;
 extern int device_id;
 extern int lim_distance;
 extern int lim_angle;
+extern char update_server_url[200];
 
 
 extern void buzzer();

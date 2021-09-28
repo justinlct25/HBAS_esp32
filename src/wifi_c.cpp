@@ -1,7 +1,7 @@
 #include "wifi_c.h"
 
-const char *ssid = "Justin";                          // "REPLACE_WITH_YOUR_SSID";
-const char *password = "pppppppp";                   // "REPLACE_WITH_YOUR_PASSWORD";
+char wifi_ssid[1000] = "Justin";                          // "REPLACE_WITH_YOUR_SSID";
+char wifi_password[100] = "pppppppp";                   // "REPLACE_WITH_YOUR_PASSWORD";
 
 // these are for NTPClient connection
 WiFiUDP ntpUDP;
@@ -10,7 +10,7 @@ NTPClient timeClient(ntpUDP, "0.hk.pool.ntp.org", 3600 * 8);
 
 void wifi_init()
 {
-    WiFi.begin(ssid, password);
+    WiFi.begin(wifi_ssid, wifi_password);
     WiFi.setAutoReconnect(true);
     WiFi.persistent(true);
     int start_time = millis();
@@ -47,7 +47,7 @@ bool wifi_stat() // connected will return true
 void wifi_reconnect() //please give this function sometime to run before rerun
 {
     WiFi.disconnect();
-    WiFi.begin(ssid, password);
+    WiFi.begin(wifi_ssid, wifi_password);
 }
 
 int wifi_strength()

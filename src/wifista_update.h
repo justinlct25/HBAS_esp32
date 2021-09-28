@@ -7,6 +7,7 @@
 #include <version.h>
 #include <ota.h>
 
+extern bool staUpdate;
 extern unsigned long previousWifiMillis;
 extern long Wifiinterval;
 

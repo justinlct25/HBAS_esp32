@@ -1,6 +1,7 @@
 #ifndef _WIFIAP_SERVER_H
 #define _WIFIAP_SERVER_H
 
+#include <Arduino.h>
 #include <ArduinoNvs.h>
 #include <WiFi.h>
 #include <AsyncTCP.h>
@@ -10,9 +11,9 @@
 #include <sstream>
 #include <bat.h>
 #include <version.h>
+#include <ota.h>
 
-
-extern char wifi_ap_ssid[100];
+extern char wifi_ap_ssid[200];
 extern const char* wifi_ap_password;
 extern const char index_html[] PROGMEM;
 extern const char* PARAM_DISTANCE;

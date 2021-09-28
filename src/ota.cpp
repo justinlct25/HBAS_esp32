@@ -2,7 +2,7 @@
 
 WiFiClient client;
 static HttpsOTAStatus_t otastatus;
-static const char *url = "http://172.20.10.5:88/bin/";
+char bin_url[1300] = "http://172.20.10.5:88/bin/";
 static const char *server_certificate = "0";
 bool isstartup = false;
 
@@ -35,7 +35,7 @@ void HttpEvent(HttpEvent_t *event)
 void ota_update(){
     HttpsOTA.onHttpEvent(HttpEvent);
     Serial.println("Starting OTA");
-    HttpsOTA.begin(url,server_certificate); 
+    HttpsOTA.begin(bin_url,server_certificate); 
     Serial.println("Please Wait it takes some time ...");
 }
 

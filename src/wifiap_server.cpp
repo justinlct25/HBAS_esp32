@@ -1,13 +1,16 @@
 #include "wifiap_server.h"
 #include <AsyncElegantOTA.h>
 
-char wifi_ap_ssid[100] = "Handbrake-Alert-System";
+char wifi_ap_ssid[200] = "Handbrake-Alert-System";
 // char wifi_ap_ssid[100];
 // char* wifi_ap_ssid = "Handbrake-Alert-System";
 const char* wifi_ap_password = "handbrake";
 const char* PARAM_DEVICEID = "inputDeviceId";
 const char* PARAM_DISTANCE = "inputDistance";
 const char* PARAM_ANGLE = "inputAngle";
+const char* PARAM_WIFISSID = "inputWifiSsid";
+const char* PARAM_WIFIPW = "inputWifiPw";
+const char* PARAM_UPDATESERVERURL = "inputServerUrl";
 
 const char index_html[] PROGMEM = R"rawliteral(
 <!DOCTYPE HTML>
@@ -43,6 +46,12 @@ const char index_html[] PROGMEM = R"rawliteral(
     <div id="currentAngle"></div> 
     <h3>System Status Log</h3>
     <textarea id="systemLogger" style="width:100%;height:50%;"></textarea>
+    <h3>Wifi STA-mode OTA Update Setting: </h3>
+    <div id="updateConfigContainer">
+        %CURRENTSTAOTACONFIG%
+        <button id="editUpdateConfig">Edit</button>
+    </div>
+
   </body>
   <script>
     const statusGateway = `ws://${window.location.hostname}/statusSocket`;
@@ -56,8 +65,8 @@ const char index_html[] PROGMEM = R"rawliteral(
     window.addEventListener('load', onLoad);
     document.getElementById("editConfig").onclick = editConfigButtonEvent;
     document.getElementById("editDeviceId").onclick = editDeviceId;
-    function submitMessage() {
-    }
+    document.getElementById("editUpdateConfig").onclick = editUpdateConfig;
+    function submitMessage() {}
     function initStatusWebSocket(){
         console.log('Trying to open a StatusSocket connection...');
         statussocket = new WebSocket(statusGateway);
@@ -153,8 +162,18 @@ const char index_html[] PROGMEM = R"rawliteral(
     function editDeviceId(){
         document.getElementById("deviceIdContainer").innerHTML=`
             <form action="/deviceconfig" target="hidden-form">
-                Device ID: <input id="idInput" type="text" name="inputDeviceId">
+                Device ID: HbAs_<input id="idInput" type="text" name="inputDeviceId">
                 <input type="submit" value="Submit" >
+            </form>`
+    }
+    function editUpdateConfig(){
+        document.getElementById("updateConfigContainer").innerHTML=`
+            <form = action="/updateconfig" target="hidden-form">
+                Wifi ssid: <input type="text" name="inputWifiSsid"><br>
+                Wifi pw: <input type="text" name="inputWifiPw"><br>
+                Server URL:<br>
+                <input type="text" name="inputServerUrl"><br>
+                <input type="submit" value="Submit">
             </form>`
     }
   </script>
@@ -216,6 +235,17 @@ String processor(const String& var){
         status += "</div>";
         return status;
     }
+    if(var == "CURRENTSTAOTACONFIG"){
+        String update = "";
+        update += "<div>Wifi ssid: ";
+        update += wifi_ssid;
+        update += "</div><div>Wifi password: ";
+        update += wifi_password;
+        update += "</div><div>Update Server URL: ";
+        update += update_server_url;
+        update += "</div>";
+        return update;
+    }
   return String();
 }
 
@@ -230,6 +260,7 @@ void wifiWebSocket_init(){
     server.addHandler(&loggerSocket);
 }
 
+
 void wifiAPServer_init(){
     WiFi.softAP(wifi_ap_ssid, wifi_ap_password);
     if(!MDNS.begin("handbrake")){
@@ -243,12 +274,6 @@ void wifiAPServer_init(){
     server.on("/", HTTPP_GET, [](AsyncWebServerRequest *request){
       request->send_P(200, "text/html", index_html, processor);
       // request->send_P(200, "text/html", index_html);
-    });
-    server.on("/current", HTTPP_GET, [](AsyncWebServerRequest *request){
-      Serial.print("current");
-      char tempDistance=(char)lim_distance;
-      Serial.println(tempDistance);
-      request->send_P(200, "text/plain", &tempDistance);
     });
     server.on("/deviceconfig", HTTPP_GET, [] (AsyncWebServerRequest *request){
         if(request->hasParam(PARAM_DEVICEID)){
@@ -293,6 +318,29 @@ void wifiAPServer_init(){
       } else {
         request->send(200, "text/text", "incomplete configuration");
       }
+    });
+    server.on("/updateconfig", HTTPP_GET, [] (AsyncWebServerRequest *request) {
+        if((request->hasParam(PARAM_WIFISSID))&&(request->hasParam(PARAM_WIFIPW))&&(request->hasParam(PARAM_UPDATESERVERURL))){
+            // wifi_ssid = (request->getParam(PARAM_WIFISSID)->value())c_str();
+            sprintf(wifi_ssid, "%s", (request->getParam(PARAM_WIFISSID)->value()));
+            NVS.setString("wifi_ssid", (request->getParam(PARAM_WIFISSID)->value()));
+            // wifi_password = (request->getParam(PARAM_WIFIPW)->value()).c_str();
+            sprintf(wifi_password, "%s", (request->getParam(PARAM_WIFIPW)->value()));
+            NVS.setString("wifi_password", (request->getParam(PARAM_WIFIPW)->value()));
+            String nvs_url = (request->getParam(PARAM_UPDATESERVERURL)->value());
+            // Serial.println("take");
+            // Serial.println(nvs_url);
+            NVS.setString("server_url", nvs_url);
+            sprintf(update_server_url, "%s", nvs_url);
+            // sprintf(update_server_url, "%s", nvs_url);
+            // update_server_url = (char* )nvs_url.c_str();
+            sprintf(version_url, "http://%s/version",nvs_url);
+            sprintf(bin_url, "http://%s/bin/",nvs_url);
+            request->send(200, "text/text", "device id set");
+            statusSocket.textAll(String(device_id));
+        } else{
+            request->send(200, "text/text", "incomplete configuration");
+        }
     });
     server.onNotFound(notFound);
     server.begin();

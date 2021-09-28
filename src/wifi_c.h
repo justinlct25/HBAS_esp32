@@ -6,8 +6,8 @@
 #include <WiFi.h>
 #include <WiFiUdp.h>
 
-extern const char *ssid;
-extern const char *password;
+extern char wifi_ssid[1000];
+extern char wifi_password[100];
 
 void wifi_init();
 void wifi_reconnect();

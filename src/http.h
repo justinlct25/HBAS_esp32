@@ -5,7 +5,7 @@
 #include <HTTPClient.h>
 #include <wifi_c.h>
 
-extern const char *URL;
+extern char version_url[1300];
 extern String latestVersion;
 extern String result;
 extern String payload;

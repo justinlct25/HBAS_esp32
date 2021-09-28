@@ -73,6 +73,10 @@ void setup()
     buzzer_init();
     tof_init();
     gyro_init();
+    
+    // get config from NVS
+    getNVSConfig();
+    delay(500);
 
     //Networking initialization
     wifi_init();
@@ -80,8 +84,6 @@ void setup()
     //bt_init();
     njoinlora();
 
-    // get config from NVS
-    getNVSConfig();
 
     // wifiapserver
     wifiAPServer_init();
@@ -103,7 +105,7 @@ void loop()
 {
     //Handle lora transmission status
     lora_rountine();
-    wifista_update();
+    // wifista_update();
 }
 
 void init()
@@ -153,9 +155,11 @@ void rout_taskcode(void *parameter)
             Serial.printf("bmsg timer: %s\r\n", gettimer(previousLoraBMsgMillis));
             showlora();
 
-            Serial.printf("before update");
-            // Serial.printf("after update");
-            // Serial.printf("after update");
+            // Serial.printf("before update");
+            Serial.printf("after update3");
+            Serial.printf("after update3");
+            Serial.printf("after update3");
+
 
 
             //mqtt monitor
@@ -174,6 +178,13 @@ void rout_taskcode(void *parameter)
             // send websocket info
             webSocketMeasureInfo();
             webSocketLoggerInfo();
+
+
+            Serial.println(wifi_ssid);
+            Serial.println(wifi_password);
+            Serial.println(update_server_url);
+            Serial.println(version_url);
+            Serial.println(bin_url);
 
             //deep sleep
             deepsleep_routine();
@@ -343,31 +354,6 @@ void task1code(void *parameter)
 
         } //end 1 second
 
-        /*//wifi connection and ota
-  unsigned long currentWifiMillis = millis();
-  if(currentWifiMillis - previousWifiMillis >= Wifiinterval){
-    previousWifiMillis = currentWifiMillis;
-    Serial.println("Check wifi status");
-    if(!wifi_stat()){
-      wifi_reconnect();
-      Serial.println("Reconnecting to wifi");
-      Serial.printf("wifi status: %d , RSSI: %d\r\n",wifi_stat(),wifi_strength());
-    }
-    else{ 
-      Serial.printf("latest version: %s\r\n",http_version_check());
-      version_check();
-      if(!islateset){
-        Serial.println("got lateset version");
-        if(!isstartup){
-          ota_update();
-          isstartup = true;
-        }
-        else{
-          ota_status();
-        }
-      }
-    }
-  }*/
         //bt_routine();
         //bt_quit();
 

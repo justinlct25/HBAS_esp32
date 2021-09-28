@@ -1,5 +1,6 @@
 #include "wifista_update.h"
 
+bool staUpdate = false;
 unsigned long previousWifiMillis = 0;
 // long Wifiinterval = 3600000; //1 hour
 // long Wifiinterval = 100000; //1 mins

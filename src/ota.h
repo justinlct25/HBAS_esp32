@@ -7,6 +7,7 @@
 
 extern WiFiClient client;
 extern bool isstartup;
+extern char bin_url[1300];
 
 extern void HttpEvent(HttpEvent_t *);
 
