@@ -3,6 +3,7 @@
 char testmsg[60];
 
 char *encode_cmsg(char msgtype){
+  // tinygps();
   char h_timestamp[10];
   char h_latitude[10];
   char h_longitude[11];
@@ -10,8 +11,26 @@ char *encode_cmsg(char msgtype){
   char h_msgtype=msgtype;
   memset(testmsg,'\0',60);
   sprintf(h_timestamp,"%x",(unsigned int)utctime());
-  sprintf(h_latitude,"%x",(int)(((sLatitude.toFloat())+90)*1000000));
-  sprintf(h_longitude,"%x",(int)(((sLongitude.toFloat())+180)*1000000));
+  if(issleep){
+    Serial.print("NVSgggg");
+    sprintf(h_latitude,"%x",(int)(((NVS.getString("latitude").toFloat())+90)*1000000));
+    sprintf(h_longitude,"%x",(int)((((NVS.getString("longitude")).toFloat())+180)*1000000));
+  }else{
+    sprintf(h_latitude,"%x",(int)(((sLatitude.toFloat())+90)*1000000));
+    sprintf(h_longitude,"%x",(int)(((sLongitude.toFloat())+180)*1000000));
+  }
+  // Serial.println("outside 0");
+  // Serial.println(str(h_latitude));
+  // Serial.println(str(h_longitude));
+  // Serial.println(h_latitude);
+  // Serial.println(h_longitude);
+  // Serial.println("outside 0");
+  // Serial.println(sLatitude);
+  // if(strcmp()){
+  // if(sLatitude=="0"||sLongitude=="0"){
+  // Serial.print("inside 0");
+  
+  // }
   sprintf(h_bat,"%x",bat2);
   sprintf(testmsg,"%s;%s;%s;%s;%c",h_timestamp,h_latitude,h_longitude,h_bat,h_msgtype);
   

@@ -12,6 +12,11 @@
 #include <bat.h>
 #include <version.h>
 #include <ota.h>
+#include <deepsleep.h>
+
+extern unsigned long quit_time_wifiap;
+
+extern bool wifi_inited;
 
 extern char wifi_ap_ssid[200];
 extern const char* wifi_ap_password;
@@ -29,6 +34,7 @@ void wifiAPServer_init();
 void SerialPrintLimitDistanceAngle();
 void webSocketMeasureInfo();
 void webSocketLoggerInfo();
+void wifiAPServer_routine();
 void AsyncElegantOTALoop();
 
 #endif

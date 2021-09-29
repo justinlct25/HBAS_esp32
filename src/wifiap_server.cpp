@@ -1,10 +1,14 @@
 #include "wifiap_server.h"
 #include <AsyncElegantOTA.h>
 
+unsigned long quit_time_wifiap = 300000UL; // 5 minutes
+
+
+bool wifi_inited = false;
 char wifi_ap_ssid[200] = "Handbrake-Alert-System";
 // char wifi_ap_ssid[100];
 // char* wifi_ap_ssid = "Handbrake-Alert-System";
-const char* wifi_ap_password = "handbrake";
+const char* wifi_ap_password = "muselabs";
 const char* PARAM_DEVICEID = "inputDeviceId";
 const char* PARAM_DISTANCE = "inputDistance";
 const char* PARAM_ANGLE = "inputAngle";
@@ -29,7 +33,7 @@ const char index_html[] PROGMEM = R"rawliteral(
   </style>
   </head>
   <body>
-    <h1>Truck Alert System Configuration</h1>
+    <h1>Handbrake Alert System Configuration</h1>
     <div id="deviceIdContainer">
         %CURRENTDEVICEID%<button id="editDeviceId">Edit</button> 
     </div>
@@ -262,6 +266,7 @@ void wifiWebSocket_init(){
 
 
 void wifiAPServer_init(){
+  Serial.print(wifi_ap_ssid);
     WiFi.softAP(wifi_ap_ssid, wifi_ap_password);
     if(!MDNS.begin("handbrake")){
     Serial.println("Error starting mDNS");
@@ -347,6 +352,7 @@ void wifiAPServer_init(){
     AsyncElegantOTA.begin(&server);
 }
 
+
 void webSocketMeasureInfo(){
     char measure[50];
     sprintf(measure, "%d,%d", stickrot, distance);
@@ -370,6 +376,26 @@ void SerialPrintLimitDistanceAngle(){
   Serial.println(lim_angle);
 }
 
+void wifiAPServer_routine(){
+  if (millis()<=quit_time_wifiap){
+  // if (bat >= highvolt){
+    Serial.print("wifiapstatusstarted");
+    Serial.print(WiFi.softAPgetStationNum());
+    // if(wifi_inited==false && WiFi.softAPgetStationNum()==0){
+    if(WiFi.softAPgetStationNum()==0){
+      Serial.print("wifiinit");
+      wifiAPServer_init();
+      wifi_inited = true;
+    }
+  } else{
+    Serial.print("wifiapstatusclose");
+    Serial.print(WiFi.softAPgetStationNum());
+    WiFi.softAPdisconnect(true);
+    wifi_inited = false;
+  }
+}
+
 void AsyncElegantOTALoop(){
     AsyncElegantOTA.loop();
 }
+

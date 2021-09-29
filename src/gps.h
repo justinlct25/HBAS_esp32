@@ -3,6 +3,8 @@
 
 #include <Arduino.h>
 #include "TinyGPS++.h"
+#include <ArduinoNvs.h>
+
 
 extern TinyGPSPlus tgps;
 

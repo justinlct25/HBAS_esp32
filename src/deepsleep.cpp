@@ -46,9 +46,9 @@ void deepsleep_handler()
 	Serial.printf("Current battery: %f\r\n", bat);
 	if (issleep)
 	{
-		if (bat >= lowvolt && digitalRead(16))
+		if (bat >= lowvolt && digitalRead(16) || bat >= highvolt)
 		{
-			Serial.print("Is charging or get enoguh battery\r\nLeave deep sleep mode\r\n");
+			Serial.print("Is charging or get enough battery\r\nLeave deep sleep mode\r\n");
 			issleep = false;
 			Serial.println("self-reboot");
 			ESP.restart(); //may not require
@@ -57,7 +57,7 @@ void deepsleep_handler()
 		{
 
 			int start_time = millis();
-			int time_interval = 10000;
+			int time_interval = 40000;
 			int attempts = 5;
 			while (!isjoin && millis() - start_time <= time_interval){
 				lora_rountine();
@@ -92,7 +92,7 @@ void deepsleep_handler()
 				{
 					case 0:
 					case 6:
-						sleep_time = 3600UL * 4;
+						sleep_time = long_sleep_time * 4;
 						break;
 					case 1:
 					case 2:
@@ -100,7 +100,7 @@ void deepsleep_handler()
 					case 4:
 					case 5:
 					default:
-						sleep_time = 3600UL;
+						sleep_time = long_sleep_time;
 						break;
 				}
 				Serial.printf("today is %i, sleep_time is: %i\r\n", weekday, sleep_time);
@@ -119,15 +119,18 @@ void deepsleep_handler()
 
 void deepsleep_routine()
 {
-
+	//GPIO16: HIGH - 插電	LOW - 未插電
+	//未插電時記錄當前時間
 	if (digitalRead(16)){
 		charge_stopped = millis();
 	}
+	//電量 < lowvolt && 未插電時
 	if (bat < lowvolt && !digitalRead(16))
 	{
 		Serial.println("Routine low battery deep sleep trigger");
 		routine_low_battery_sleep(long_sleep_time);
 	}
+	//電量 > low && 未插電時
 	else if (bat > lowvolt && !digitalRead(16) && millis() - charge_stopped >= charge_interval )
 	{
 		Serial.println("I should buzz then sleep");
@@ -165,6 +168,7 @@ void wake_up_task_before_sleep(int time_limit, int try_round){
 	// while (umsging ){
 	while (true && millis() - start_time <= time_limit){
 		lora_rountine();
+		// Serial.print(millis() - start_time);
 	}
 	Serial.printf("umsging state: %i", umsging);
 	Serial.printf("sent\r\n");

@@ -12,7 +12,7 @@ void bat_init()
 }
 
 void getbattery(){
-  bat = adc.readVoltage() * 2 - 0.05;
+  bat = adc.readVoltage() * 2 ;
   bat2 = int(bat * 100);
 }
 

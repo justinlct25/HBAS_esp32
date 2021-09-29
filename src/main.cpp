@@ -24,6 +24,8 @@
 #include "timer.h"
 #include "wifista_update.h"
 #include "wifiap_server.h"
+#include <ArduinoNvs.h>
+
 
 //core
 TaskHandle_t task1;
@@ -53,6 +55,7 @@ long LoraAMsginterval = 30000; //30 seconds
 
 unsigned long previousLoraBMsgMillis = 0;
 long LoraBMsginterval = 300000; //5 minutes
+// long LoraBMsginterval = 20000; //
 
 
 void init();
@@ -62,7 +65,6 @@ void setup()
     //watchdog
     // esp_task_wdt_init(60, true); //enable panic so ESP32 restarts
     // esp_task_wdt_add(NULL); //add current thread to WDT watch
-
     init();
     bat_init();
 
@@ -79,22 +81,25 @@ void setup()
     delay(500);
 
     //Networking initialization
-    wifi_init();
+    // wifi_init();
     //mqtt_init();
     //bt_init();
-    njoinlora();
+    //njoinlora();
 
 
     // wifiapserver
-    wifiAPServer_init();
+    // if(bat >= highvolt){
+    //     wifiAPServer_init();
+    //     wifi_inited = true;
+    // }
 
     //core (legacy function)
     //xTaskCreatePinnedToCore(task1code,"task1",10000,NULL,0,&task1,0);
-    deepsleep_handler();
 
+    deepsleep_handler();
     //Assign routine task
     xTaskCreate(rout_taskcode, "rout_task", 5000, NULL, 2, &rout_task);
-    xTaskCreate(lora_task_acode, "lora_task_a", 5000, NULL, 1, &lora_task_a);
+    //xTaskCreate(lora_task_acode, "lora_task_a", 5000, NULL, 1, &lora_task_a);
 
     //tof xshut io (may not need)
     pinMode(23, OUTPUT);
@@ -106,6 +111,13 @@ void loop()
     //Handle lora transmission status
     lora_rountine();
     // wifista_update();
+
+    if(bat < 3.5){
+        pinMode(3, OUTPUT);
+    }
+    else{
+        pinMode(3, INPUT);
+    }
 }
 
 void init()
@@ -114,6 +126,8 @@ void init()
     pinMode(17, OUTPUT);    //All module power supply
     digitalWrite(17, HIGH); //pull up
     pinMode(16, INPUT);     //battery charging signal
+    //reset tof pin
+    pinMode(23, OUTPUT);
     Serial.begin(115200);
 }
 
@@ -123,6 +137,14 @@ void rout_taskcode(void *parameter)
     {
         if (millis() - previousMillis >= interval)
         {
+        //     Serial.print("NVS.getString(latitude)");
+        //     Serial.println(NVS.getString("latitude"));
+        //     Serial.print("NVS.getBlobSize(latitude)");
+        //     Serial.println(NVS.getBlobSize("latitude"));
+
+        //             unsigned short usStackHighWaterMark;
+        // Serial.print(xPortGetFreeHeapSize());
+
             previousMillis = millis();
             //Necessary checking
             i2cdev_restore();
@@ -138,7 +160,7 @@ void rout_taskcode(void *parameter)
             //Serial.print("\f");  //new page for some serial monitor
             //Serial.printf(">>>>>> run on core %d  stack: %d\r\n",xPortGetCoreID(),uxTaskGetStackHighWaterMark(NULL));
             Serial.printf("-------------uptime: %s-------------\r\n", getuptime());
-            //showgpsinfo();
+            showgpsinfo();
             showbattery();
             //Serial.printf("wifi status: %d , RSSI: %d\r\n",wifi_stat(),wifi_strength());
             //Serial.printf("io16: %d\r\n",digitalRead(16));
@@ -156,11 +178,8 @@ void rout_taskcode(void *parameter)
             showlora();
 
             // Serial.printf("before update");
-            Serial.printf("after update3");
-            Serial.printf("after update3");
-            Serial.printf("after update3");
 
-
+            wifiAPServer_routine();
 
             //mqtt monitor
             //mqttpub();
@@ -180,14 +199,15 @@ void rout_taskcode(void *parameter)
             webSocketLoggerInfo();
 
 
-            Serial.println(wifi_ssid);
-            Serial.println(wifi_password);
-            Serial.println(update_server_url);
-            Serial.println(version_url);
-            Serial.println(bin_url);
+            // Serial.println(wifi_ssid);
+            // Serial.println(wifi_password);
+            // Serial.println(update_server_url);
+            // Serial.println(version_url);
+            // Serial.println(bin_url);
 
             //deep sleep
             deepsleep_routine();
+
         } //end 1s rountine
 
         //Bluetootooth routine
@@ -243,6 +263,7 @@ void rout_taskcode(void *parameter)
         {
             bmsging = false;
         }
+
     }
 }
 
@@ -300,65 +321,3 @@ void lora_task_bcode(void *parameter)
     vTaskDelete(NULL);
 }
 
-void task1code(void *parameter)
-{ //legacy function
-    for (;;)
-    {
-        //routine checking
-        unsigned long currentMillis = millis();
-        if (currentMillis - previousMillis >= interval)
-        {
-            previousMillis = currentMillis;
-            //Serial.print("\f");
-            i2cdev_restore();
-            getdistance();
-            gyro_update();
-            calrot3();
-            person();
-            checkrot2();
-            samplebattery();
-            tinygps();
-
-            //debug section
-            //Serial.printf(">>>>>> run on core %d  stack: %d\r\n",xPortGetCoreID(),uxTaskGetStackHighWaterMark(NULL));
-            Serial.printf("----------------uptime: %s----------------\r\n", getuptime());
-            showgpsinfo();
-            showbattery();
-            //Serial.printf("wifi status: %d , RSSI: %d\r\n",wifi_stat(),wifi_strength());
-            //Serial.printf("io16: %d\r\n",digitalRead(16));
-            //showstatus();
-            //showgyro();
-            //showtof();
-            //showallbool();
-            //showrecord();
-            //showversion();
-            //showi2cstate();
-            //showi2cdev();
-            //utctime();
-            //showlora();
-
-            //mqtt monitor
-            //mqttpub();
-
-            //bluetooth terminal
-            // bt.printf("      ----------uptime: %s----------      \r\n",getuptime());
-            // BTshowstatus();
-            // BTshowrecord();
-            // BTshowallbool();
-
-            led_operate(); //LED
-            buz_operate(); //buzzer
-
-            //deep sleep
-            deepsleep_routine();
-
-        } //end 1 second
-
-        //bt_routine();
-        //bt_quit();
-
-        //buz.cbuz_routine();
-        blueled.cled_routine();
-        yellowled.cled_routine();
-    }
-}
