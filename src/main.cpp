@@ -81,7 +81,7 @@ void setup()
     delay(500);
 
     //Networking initialization
-    // wifi_init();
+    wifi_init();
     //mqtt_init();
     //bt_init();
     //njoinlora();
