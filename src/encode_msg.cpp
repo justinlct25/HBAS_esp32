@@ -3,7 +3,6 @@
 char testmsg[60];
 
 char *encode_cmsg(char msgtype){
-  // tinygps();
   char h_timestamp[10];
   char h_latitude[10];
   char h_longitude[11];

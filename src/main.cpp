@@ -54,8 +54,8 @@ unsigned long previousLoraAMsgMillis = 0;
 long LoraAMsginterval = 30000; //30 seconds
 
 unsigned long previousLoraBMsgMillis = 0;
-long LoraBMsginterval = 300000; //5 minutes
-// long LoraBMsginterval = 20000; //
+// long LoraBMsginterval = 300000; //5 minutes
+long LoraBMsginterval = 20000; //
 
 
 void init();
@@ -81,7 +81,7 @@ void setup()
     delay(500);
 
     //Networking initialization
-    wifi_init();
+    // wifi_init();
     //mqtt_init();
     //bt_init();
     //njoinlora();
@@ -165,21 +165,21 @@ void rout_taskcode(void *parameter)
             //Serial.printf("wifi status: %d , RSSI: %d\r\n",wifi_stat(),wifi_strength());
             //Serial.printf("io16: %d\r\n",digitalRead(16));
             //showstatus();
-            showgyro();
-            showtof();
-            showallbool();
-            showrecord();
-            //showversion();
-            //showi2cstate();
-            //showi2cdev();
-            //utctime();
-            Serial.printf("amsg timer: %s\r\n", gettimer(previousLoraAMsgMillis));
-            Serial.printf("bmsg timer: %s\r\n", gettimer(previousLoraBMsgMillis));
+            // showgyro();
+            // showtof();
+            // showallbool();
+            // showrecord();
+            // //showversion();
+            // //showi2cstate();
+            // //showi2cdev();
+            // //utctime();
+            // Serial.printf("amsg timer: %s\r\n", gettimer(previousLoraAMsgMillis));
+            // Serial.printf("bmsg timer: %s\r\n", gettimer(previousLoraBMsgMillis));
             showlora();
 
-            // Serial.printf("before update");
+            // // Serial.printf("before update");
 
-            wifiAPServer_routine();
+            // wifiAPServer_routine();
 
             //mqtt monitor
             //mqttpub();
