@@ -46,7 +46,7 @@ void deepsleep_handler()
 	Serial.printf("Current battery: %f\r\n", bat);
 	if (issleep)
 	{
-		if (bat >= lowvolt && digitalRead(16) || bat >= highvolt)
+		if (bat >= lowvolt && !digitalRead(16) || bat >= highvolt)
 		{
 			Serial.print("Is charging or get enough battery\r\nLeave deep sleep mode\r\n");
 			issleep = false;
@@ -136,7 +136,7 @@ void deepsleep_routine()
 	}
 	//電量 > low && 未插電時
 	// else if (bat > lowvolt && bat < highvolt && !digitalRead(16) && millis() - charge_stopped >= charge_interval )
-	else if (bat > lowvolt && !digitalRead(16) && millis() - charge_stopped >= charge_interval )
+	else if (bat > lowvolt && digitalRead(16) && millis() - charge_stopped >= charge_interval )
 	{
 		Serial.println("I should buzz then sleep");
 		routine_low_battery_sleep(long_sleep_time);
@@ -147,7 +147,7 @@ void routine_low_battery_sleep(int sleep_time)
 {
 	Serial.printf("Setup ESP32 to sleep for every %i Seconds\r\n", sleep_time);
 	issleep = true;
-	esp_sleep_enable_ext0_wakeup(GPIO_NUM_12, 1);
+	esp_sleep_enable_ext0_wakeup(GPIO_NUM_36, HIGH);
 	esp_sleep_enable_timer_wakeup(sleep_time * uS);
 	buzzer(3);
 	Serial.flush();
@@ -179,7 +179,6 @@ void wake_up_task_before_sleep(int time_interval, int attempts){
 
 	while ( (!sLongitude[1] || !sLatitude[1] ) && millis() - start_time <= 40000){
 	  	tinygps();
-		Serial.println(millis() - start_time);
 	}
 	showgpsinfo();
 

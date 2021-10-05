@@ -101,9 +101,6 @@ void setup()
     xTaskCreate(rout_taskcode, "rout_task", 5000, NULL, 2, &rout_task);
     //xTaskCreate(lora_task_acode, "lora_task_a", 5000, NULL, 1, &lora_task_a);
 
-    //tof xshut io (may not need)
-    pinMode(23, OUTPUT);
-    digitalWrite(23, HIGH);
 }
 
 void loop()
@@ -125,9 +122,19 @@ void init()
     //very important
     pinMode(17, OUTPUT);    //All module power supply
     digitalWrite(17, HIGH); //pull up
-    pinMode(16, INPUT);     //battery charging signal
-    //reset tof pin
+    pinMode(16, INPUT_PULLUP);     //battery charging signal
+
+    //open MPU6050/Radar Power
+    pinMode(GPIO_NUM_2, OUTPUT);
+    digitalWrite(GPIO_NUM_2, HIGH);
+    //Red LED PIN INIT
+    pinMode(GPIO_NUM_19, OUTPUT);
+    digitalWrite(GPIO_NUM_19, HIGH);
+
+    //tof xshut io (may not need)
     pinMode(23, OUTPUT);
+    digitalWrite(23, HIGH);
+
     Serial.begin(115200);
 }
 
@@ -165,8 +172,8 @@ void rout_taskcode(void *parameter)
             //Serial.printf("wifi status: %d , RSSI: %d\r\n",wifi_stat(),wifi_strength());
             //Serial.printf("io16: %d\r\n",digitalRead(16));
             //showstatus();
-            // showgyro();
-            // showtof();
+            showgyro();
+            showtof();
             // showallbool();
             // showrecord();
             // //showversion();

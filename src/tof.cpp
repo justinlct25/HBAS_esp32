@@ -33,7 +33,7 @@ void getdistance(){
         Serial.print("reset");
         digitalWrite(23, LOW);
         digitalWrite(23, HIGH);
-        tof.init();
+        tof_init();
     }
     
 } 
