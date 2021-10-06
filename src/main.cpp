@@ -126,19 +126,19 @@ void init()
     //very important
     pinMode(17, OUTPUT);    //All module power supply
     digitalWrite(17, HIGH); //pull up
-    pinMode(16, INPUT_PULLUP);     //battery charging signal
+    // pinMode(16, INPUT_PULLUP);     //battery charging signal
 
-    //open MPU6050/Radar Power
-    pinMode(GPIO_NUM_2, OUTPUT);
-    digitalWrite(GPIO_NUM_2, HIGH);
-    //Red LED PIN INIT
-    pinMode(GPIO_NUM_19, OUTPUT);
-    digitalWrite(GPIO_NUM_19, HIGH);
+    // //open MPU6050/Radar Power
+    // pinMode(GPIO_NUM_2, OUTPUT);
+    // digitalWrite(GPIO_NUM_2, HIGH);
+    // //Red LED PIN INIT
+    // pinMode(GPIO_NUM_19, OUTPUT);
+    // digitalWrite(GPIO_NUM_19, HIGH);
 
-    //tof xshut io (may not need)
-    pinMode(23, OUTPUT);
-    digitalWrite(23, HIGH);
-
+    // //tof xshut io (may not need)
+    // pinMode(23, OUTPUT);
+    // digitalWrite(23, HIGH);
+    pinMode(16, INPUT);
     Serial.begin(115200);
 }
 
