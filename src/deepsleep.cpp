@@ -44,6 +44,8 @@ void deepsleep_handler()
 	getbattery();
 	Serial.printf("Boot number: %d\r\n", ++bootCount);
 	Serial.printf("Current battery: %f\r\n", bat);
+	Serial.print("issleep: ");
+	Serial.println(issleep);
 	if (issleep)
 	{
 		if (bat >= lowvolt && !digitalRead(16) || bat >= highvolt)
@@ -112,7 +114,6 @@ void deepsleep_handler()
 				Serial.println("Startup low battery deep sleep triggered with UNSUCCESS lora join");
 				delay(2000);
 				routine_low_battery_sleep(short_sleep_time);
-
 			}
 		// 	//++bootCount;
 		}
@@ -146,7 +147,11 @@ void deepsleep_routine()
 void routine_low_battery_sleep(int sleep_time)
 {
 	Serial.printf("Setup ESP32 to sleep for every %i Seconds\r\n", sleep_time);
+	Serial.print("issleep before: ");
+	Serial.println(issleep);
 	issleep = true;
+		Serial.print("issleep after: ");
+	Serial.println(issleep);
 	esp_sleep_enable_ext0_wakeup(GPIO_NUM_36, HIGH);
 	esp_sleep_enable_timer_wakeup(sleep_time * uS);
 	buzzer(3);
@@ -154,6 +159,7 @@ void routine_low_battery_sleep(int sleep_time)
 	Serial.println("Enter Deep Sleep Mode");
 	digitalWrite(17, LOW);
 	esp_deep_sleep_start();
+	
 }
 
 

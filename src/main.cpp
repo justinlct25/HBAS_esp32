@@ -54,8 +54,8 @@ unsigned long previousLoraAMsgMillis = 0;
 long LoraAMsginterval = 30000; //30 seconds
 
 unsigned long previousLoraBMsgMillis = 0;
-// long LoraBMsginterval = 300000; //5 minutes
-long LoraBMsginterval = 20000; //
+long LoraBMsginterval = 300000; //5 minutes
+// long LoraBMsginterval = 20000; //
 
 
 void init();
@@ -76,9 +76,6 @@ void setup()
     tof_init();
     gyro_init();
     
-    // get config from NVS
-    getNVSConfig();
-    delay(500);
 
     //Networking initialization
     // wifi_init();
@@ -95,12 +92,17 @@ void setup()
 
     //core (legacy function)
     //xTaskCreatePinnedToCore(task1code,"task1",10000,NULL,0,&task1,0);
+    Serial.println("issleep2:");
+	Serial.println(issleep);
 
     deepsleep_handler();
+
+    // get config from NVS
+    getNVSConfig();
+    delay(500);
     //Assign routine task
     xTaskCreate(rout_taskcode, "rout_task", 5000, NULL, 2, &rout_task);
     //xTaskCreate(lora_task_acode, "lora_task_a", 5000, NULL, 1, &lora_task_a);
-
 }
 
 void loop()
@@ -108,6 +110,8 @@ void loop()
     //Handle lora transmission status
     lora_rountine();
     // wifista_update();
+    // deepsleep_routine();
+
 
     if(bat < 3.5){
         pinMode(3, OUTPUT);
