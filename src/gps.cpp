@@ -26,8 +26,8 @@ void tinygps()
             {
                 sLatitude = String((double)tgps.location.lat(), 6);
                 sLongitude = String((double)tgps.location.lng(), 6);
-                NVS.setString("latitude", sLatitude);
-                NVS.setString("longitude", sLongitude);
+                // NVS.setString("latitude", sLatitude);
+                // NVS.setString("longitude", sLongitude);
             }
             else
             {

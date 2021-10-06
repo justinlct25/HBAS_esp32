@@ -54,8 +54,8 @@ unsigned long previousLoraAMsgMillis = 0;
 long LoraAMsginterval = 30000; //30 seconds
 
 unsigned long previousLoraBMsgMillis = 0;
-// long LoraBMsginterval = 300000; //5 minutes
-long LoraBMsginterval = 20000; //
+long LoraBMsginterval = 300000; //5 minutes
+//long LoraBMsginterval = 20000; //
 
 
 void init();
@@ -76,9 +76,6 @@ void setup()
     tof_init();
     gyro_init();
     
-    // get config from NVS
-    getNVSConfig();
-    delay(500);
 
     //Networking initialization
     // wifi_init();
@@ -95,15 +92,17 @@ void setup()
 
     //core (legacy function)
     //xTaskCreatePinnedToCore(task1code,"task1",10000,NULL,0,&task1,0);
+    Serial.println("issleep2:");
+	Serial.println(issleep);
 
     deepsleep_handler();
+
+    // get config from NVS
+    getNVSConfig();
+    delay(500);
     //Assign routine task
     xTaskCreate(rout_taskcode, "rout_task", 5000, NULL, 2, &rout_task);
     //xTaskCreate(lora_task_acode, "lora_task_a", 5000, NULL, 1, &lora_task_a);
-
-    //tof xshut io (may not need)
-    pinMode(23, OUTPUT);
-    digitalWrite(23, HIGH);
 }
 
 void loop()
@@ -111,6 +110,8 @@ void loop()
     //Handle lora transmission status
     lora_rountine();
     // wifista_update();
+    // deepsleep_routine();
+
 
     if(bat < 3.5){
         pinMode(3, OUTPUT);
@@ -125,9 +126,19 @@ void init()
     //very important
     pinMode(17, OUTPUT);    //All module power supply
     digitalWrite(17, HIGH); //pull up
-    pinMode(16, INPUT);     //battery charging signal
-    //reset tof pin
-    pinMode(23, OUTPUT);
+    // pinMode(16, INPUT_PULLUP);     //battery charging signal
+
+    // //open MPU6050/Radar Power
+    // pinMode(GPIO_NUM_2, OUTPUT);
+    // digitalWrite(GPIO_NUM_2, HIGH);
+    // //Red LED PIN INIT
+    // pinMode(GPIO_NUM_19, OUTPUT);
+    // digitalWrite(GPIO_NUM_19, HIGH);
+
+    // //tof xshut io (may not need)
+    // pinMode(23, OUTPUT);
+    // digitalWrite(23, HIGH);
+    pinMode(16, INPUT);
     Serial.begin(115200);
 }
 
@@ -165,8 +176,8 @@ void rout_taskcode(void *parameter)
             //Serial.printf("wifi status: %d , RSSI: %d\r\n",wifi_stat(),wifi_strength());
             //Serial.printf("io16: %d\r\n",digitalRead(16));
             //showstatus();
-            // showgyro();
-            // showtof();
+            showgyro();
+            showtof();
             // showallbool();
             // showrecord();
             // //showversion();
