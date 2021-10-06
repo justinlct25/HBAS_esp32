@@ -51,9 +51,6 @@ void lora_rountine(){
     ln = strchr(input,'\n');
     if(ln != NULL){
         for(int i=0;input[i]!='\0';i++) Serial.print(input[i]);
-        
-        Serial.print("received lora message: ");
-        Serial.print(input);
 
         //join 
         if(strstr(input,"+JOIN: Network joined") !=NULL || strstr(input,"+JOIN: Joined already") !=NULL || strstr(input,"joined") !=NULL || strstr(input,"Joined") !=NULL || strstr(input,"already") !=NULL || strstr(input,"+JOIN: Network joine") !=NULL || strstr(input,"NetID") !=NULL  || strstr(input,"DevAddr") !=NULL ){

@@ -44,8 +44,7 @@ void deepsleep_handler()
 	getbattery();
 	Serial.printf("Boot number: %d\r\n", ++bootCount);
 	Serial.printf("Current battery: %f\r\n", bat);
-	Serial.print("issleep: ");
-	Serial.println(issleep);
+	Serial.printf("issleep: %i\r\n", issleep);
 	if (issleep)
 	{
 		if (bat >= lowvolt && !digitalRead(16) || bat >= highvolt)
@@ -68,7 +67,9 @@ void deepsleep_handler()
 					Serial.printf("iteration time: %i\r\n", i);
 					njoinlora();
 					start_time = millis();
-					while (!isjoin && millis() - start_time <= time_interval){
+					Serial.print("joining: ");
+					Serial.println(joining);
+					while ( joining && millis() - start_time <= time_interval){
 						lora_rountine();
 					}
 					if (isjoin) break;
@@ -147,14 +148,10 @@ void deepsleep_routine()
 void routine_low_battery_sleep(int sleep_time)
 {
 	Serial.printf("Setup ESP32 to sleep for every %i Seconds\r\n", sleep_time);
-	Serial.print("issleep before: ");
-	Serial.println(issleep);
 	issleep = true;
-		Serial.print("issleep after: ");
-	Serial.println(issleep);
 	esp_sleep_enable_ext0_wakeup(GPIO_NUM_36, HIGH);
 	esp_sleep_enable_timer_wakeup(sleep_time * uS);
-	buzzer(3);
+	//buzzer(3);
 	Serial.flush();
 	Serial.println("Enter Deep Sleep Mode");
 	digitalWrite(17, LOW);
@@ -166,11 +163,10 @@ void routine_low_battery_sleep(int sleep_time)
 
 
 
-void lora_task_bcode_wake_up(void * parameter){
+void lora_task_bcode_wake_up(){
   	Serial.println("loratask b");
 	nsendloramsg(encode_cmsg('B'));
 	bmsging = true;
-  	vTaskDelete(NULL);
 }
 
 void wake_up_task_before_sleep(int time_interval, int attempts){
@@ -180,27 +176,29 @@ void wake_up_task_before_sleep(int time_interval, int attempts){
 	int start_time = millis();
 
 	Serial.printf("location: %s\r\n", location);
-	Serial.printf("%i\r\n", !sLongitude[1]);
-	Serial.printf("%i\r\n", !sLatitude[1]);
 
 	while ( (!sLongitude[1] || !sLatitude[1] ) && millis() - start_time <= 40000){
 	  	tinygps();
 	}
 	showgpsinfo();
 
+	Serial.print("umsging: ");
 	Serial.println(umsging);
 	if (!umsging){
 		for (int i = 0; i < attempts; i ++){
-			Serial.println(i);
-			xTaskCreate(lora_task_bcode_wake_up,"lora_task_b_wake_up",5000,NULL,2,&lora_task_b_wake_up);
+			Serial.printf("-attempt is: %i-\r\n", i);
+			Serial.printf("umsging before function: %i", umsging);
+			lora_task_bcode_wake_up();
 			start_time = millis();
+			Serial.printf("umsging after function: %i\r\n", umsging);
 			while (umsging && millis() - start_time <= time_interval){
 				lora_rountine();
 			}
-			if(!umsging) break;
+			if(!umsging){
+				Serial.println("leaving for loop");
+				break;
+			} 
 		}
 	}
-		Serial.println(umsging);
-
 }
 
