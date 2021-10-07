@@ -177,7 +177,7 @@ void wake_up_task_before_sleep(int time_interval, int attempts){
 
 	Serial.printf("location: %s\r\n", location);
 
-	while ( (!sLongitude[1] || !sLatitude[1] ) && millis() - start_time <= 40000){
+	while (millis() - start_time <= 40000){
 	  	tinygps();
 		// Serial.println(millis() - start_time);
 	}

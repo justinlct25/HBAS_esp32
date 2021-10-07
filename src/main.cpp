@@ -54,8 +54,8 @@ unsigned long previousLoraAMsgMillis = 0;
 long LoraAMsginterval = 30000; //30 seconds
 
 unsigned long previousLoraBMsgMillis = 0;
-long LoraBMsginterval = 300000; //5 minutes
-//long LoraBMsginterval = 20000; //
+//long LoraBMsginterval = 300000; //5 minutes
+long LoraBMsginterval = 20000; //
 
 
 void init();
