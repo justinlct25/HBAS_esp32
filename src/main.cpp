@@ -212,7 +212,7 @@ void rout_taskcode(void *parameter)
 
             // // Serial.printf("before update");
 
-            //wifiAPServer_routine();
+            wifiAPServer_routine();
 
             //mqtt monitor
             //mqttpub();
