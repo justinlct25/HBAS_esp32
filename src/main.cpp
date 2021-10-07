@@ -101,10 +101,7 @@ void setup()
 
 
     // wifiapserver
-    // if(bat >= highvolt){
-    //     wifiAPServer_init();
-    //     wifi_inited = true;
-    // }
+    wifiAPServer_init();
 
     //core (legacy function)
     //xTaskCreatePinnedToCore(task1code,"task1",10000,NULL,0,&task1,0);
