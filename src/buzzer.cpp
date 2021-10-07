@@ -19,8 +19,8 @@ void buzzer(int x) {
     case 3:
     {
         int beep_duration{200};
-        // for (int i = 0; i < 10; i++)
-        for (int i = 0; i < 1; i++)
+        for (int i = 0; i < 10; i++)
+        // for (int i = 0; i < 1; i++)
         {
             Serial.print(i);
             ledcWrite(0, 255);
