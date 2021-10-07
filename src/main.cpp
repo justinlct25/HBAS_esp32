@@ -78,8 +78,8 @@ void setup()
     gyro_init();
 
     //new
-    //if(!issleep) gps_init();
-    //gps_init();
+    // if(!issleep) gps_init();
+    // gps_init();
     if(issleep) 
     {
         gps_hotstart();
@@ -203,8 +203,8 @@ void rout_taskcode(void *parameter)
             showallbool();
             showrecord();
             //showversion();
-            // showi2cstate();
-            // showi2cdev();
+            showi2cstate();
+            showi2cdev();
             // //utctime();
             // Serial.printf("amsg timer: %s\r\n", gettimer(previousLoraAMsgMillis));
             // Serial.printf("bmsg timer: %s\r\n", gettimer(previousLoraBMsgMillis));
