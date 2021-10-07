@@ -16,6 +16,48 @@ unsigned long lutimestamp;
 
 TinyGPSPlus tgps;
 
+void gps_init()
+{
+    // //強制冷啟動
+    // Serial2.print("$PMTK104*37\r\n");
+    // //熱啟動
+    // Serial2.print("$PMTK101*32\r\n");
+
+    //306 PMTK_API_SET_MIN_SNR
+    //Serial2.print("$PMTK306,30*1F\r\n");
+
+    //311 PMTK_API_SET_ELEV_MASK
+    //Serial2.print("$PMTK311,10*28\r\n");
+
+    //353 PMTK_API_SET_GNSS_SEARCH_MODE
+    //Serial2.print("$PMTK353,1,1,0,0,1*2B\r\n");
+}
+
+void gps_coolstart()
+{
+    Serial2.print("$PMTK104*37\r\n");
+    Serial.print("********* GPS COOL START *********");
+}
+
+void gps_warmstart()
+{
+    Serial2.print("$PMTK102*31\r\n");
+    Serial.print("********* GPS WARM START *********");
+}
+
+void gps_hotstart()
+{
+    Serial2.print("$PMTK101*32\r\n");
+    Serial.print("********* GPS HOT START *********");
+}
+
+void gps_standby()
+{
+    //STANDBY
+    Serial2.print("$PMTK161,0*28\r\n");
+    Serial.println("GPS Standby");
+}
+
 void tinygps()
 {
     while (Serial2.available() > 0)
@@ -26,8 +68,10 @@ void tinygps()
             {
                 sLatitude = String((double)tgps.location.lat(), 6);
                 sLongitude = String((double)tgps.location.lng(), 6);
-                NVS.setString("latitude", sLatitude);
-                NVS.setString("longitude", sLongitude);
+                // NVS.setString("latitude", sLatitude);
+                // NVS.setString("longitude", sLongitude);
+                // Serial.println("latitude" + sLatitude);
+                // Serial.println("longitude" + sLongitude);
             }
             else
             {

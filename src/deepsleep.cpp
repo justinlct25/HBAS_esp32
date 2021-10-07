@@ -138,7 +138,7 @@ void deepsleep_routine()
 	}
 	//電量 > low && 未插電時
 	// else if (bat > lowvolt && bat < highvolt && !digitalRead(16) && millis() - charge_stopped >= charge_interval )
-	else if (bat > lowvolt && !digitalRead(16) && millis() - charge_stopped >= charge_interval )
+	else if (bat > lowvolt && bat < highvolt && !digitalRead(16) && millis() - charge_stopped >= charge_interval )
 	{
 		Serial.println("I should buzz then sleep");
 		routine_low_battery_sleep(long_sleep_time);
@@ -151,7 +151,7 @@ void routine_low_battery_sleep(int sleep_time)
 	issleep = true;
 	esp_sleep_enable_ext0_wakeup(GPIO_NUM_12, HIGH);
 	esp_sleep_enable_timer_wakeup(sleep_time * uS);
-	//buzzer(3);
+	buzzer(3);
 	Serial.flush();
 	Serial.println("Enter Deep Sleep Mode");
 	digitalWrite(17, LOW);
@@ -177,9 +177,10 @@ void wake_up_task_before_sleep(int time_interval, int attempts){
 
 	Serial.printf("location: %s\r\n", location);
 
+	//001:
+	//while ( (!sLongitude[1] || !sLatitude[1] ) && millis() - start_time <= 40000){
 	while (millis() - start_time <= 40000){
 	  	tinygps();
-		// Serial.println(millis() - start_time);
 	}
 	showgpsinfo();
 

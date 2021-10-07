@@ -8,6 +8,11 @@
 
 extern TinyGPSPlus tgps;
 
+void gps_init();
+void gps_coolstart();
+void gps_warmstart();
+void gps_hotstart();
+void gps_standby();
 void tinygps();
 void showgpsinfo();
 time_t utctime();

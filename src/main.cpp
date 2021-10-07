@@ -51,11 +51,12 @@ unsigned long previousMillis = 0;
 const long interval = 1000; //1 second
 
 unsigned long previousLoraAMsgMillis = 0;
-long LoraAMsginterval = 30000; //30 seconds
+// long LoraAMsginterval = 30000; //30 seconds
+long LoraAMsginterval = 20000; //30 seconds
 
 unsigned long previousLoraBMsgMillis = 0;
 //long LoraBMsginterval = 300000; //5 minutes
-long LoraBMsginterval = 20000; //
+long LoraBMsginterval = 30000; //
 
 
 void init();
@@ -75,10 +76,25 @@ void setup()
     buzzer_init();
     tof_init();
     gyro_init();
-    
+
+    //new
+    //if(!issleep) gps_init();
+    //gps_init();
+    if(issleep) 
+    {
+        gps_hotstart();
+        //gps_warmstart();
+    }
+    else 
+    {
+        //gps_coolstart();
+        gps_warmstart();
+        gps_hotstart();
+    }
+
 
     //Networking initialization
-    // wifi_init();
+    //wifi_init();
     //mqtt_init();
     //bt_init();
     //njoinlora();
@@ -92,8 +108,8 @@ void setup()
 
     //core (legacy function)
     //xTaskCreatePinnedToCore(task1code,"task1",10000,NULL,0,&task1,0);
-    Serial.println("issleep2:");
-	Serial.println(issleep);
+    // Serial.println("issleep2:");
+	// Serial.println(issleep);
 
     deepsleep_handler();
 
@@ -111,8 +127,10 @@ void loop()
     lora_rountine();
     // wifista_update();
     // deepsleep_routine();
-
-
+    //if((millis() / 1000) > 30 && (millis() / 1000) < 31) gps_standby();
+    //if((millis() / 1000) > 30 && (millis() / 1000) < 31) gps_standby();
+    //if((millis() / 1000) > 31 && (millis() / 1000) < 32) gps_hotstart();
+    
     if(bat < 3.5){
         pinMode(3, OUTPUT);
     }
@@ -127,6 +145,7 @@ void init()
     pinMode(17, OUTPUT);    //All module power supply
     digitalWrite(17, HIGH); //pull up
     // pinMode(16, INPUT_PULLUP);     //battery charging signal
+    pinMode(16, INPUT);
 
     // //open MPU6050/Radar Power
     // pinMode(GPIO_NUM_2, OUTPUT);
@@ -136,9 +155,10 @@ void init()
     // digitalWrite(GPIO_NUM_19, HIGH);
 
     // //tof xshut io (may not need)
-    // pinMode(23, OUTPUT);
-    // digitalWrite(23, HIGH);
-    pinMode(16, INPUT);
+    pinMode(23, OUTPUT);
+    digitalWrite(23, HIGH);
+
+    
     Serial.begin(115200);
 }
 
@@ -146,6 +166,7 @@ void rout_taskcode(void *parameter)
 {
     for (;;)
     {
+
         if (millis() - previousMillis >= interval)
         {
         //     Serial.print("NVS.getString(latitude)");
@@ -165,6 +186,7 @@ void rout_taskcode(void *parameter)
             person();
             checkrot2();
             samplebattery();
+
             tinygps();
 
             //Debug printing
@@ -178,11 +200,11 @@ void rout_taskcode(void *parameter)
             //showstatus();
             showgyro();
             showtof();
-            // showallbool();
-            // showrecord();
-            // //showversion();
-            // //showi2cstate();
-            // //showi2cdev();
+            showallbool();
+            showrecord();
+            //showversion();
+            // showi2cstate();
+            // showi2cdev();
             // //utctime();
             // Serial.printf("amsg timer: %s\r\n", gettimer(previousLoraAMsgMillis));
             // Serial.printf("bmsg timer: %s\r\n", gettimer(previousLoraBMsgMillis));
@@ -190,7 +212,7 @@ void rout_taskcode(void *parameter)
 
             // // Serial.printf("before update");
 
-            // wifiAPServer_routine();
+            //wifiAPServer_routine();
 
             //mqtt monitor
             //mqttpub();
