@@ -56,7 +56,11 @@ long LoraAMsginterval = 20000; //30 seconds
 
 unsigned long previousLoraBMsgMillis = 0;
 long LoraBMsginterval = 300000; //5 minutes
+<<<<<<< HEAD
 //long LoraBMsginterval = 30000; //
+=======
+// long LoraBMsginterval = 30000; //
+>>>>>>> e2b778cf965ac7a737b0161533b4e6dae0bbd5f3
 
 
 void init();
@@ -101,10 +105,7 @@ void setup()
 
 
     // wifiapserver
-    // if(bat >= highvolt){
-    //     wifiAPServer_init();
-    //     wifi_inited = true;
-    // }
+    wifiAPServer_init();
 
     //core (legacy function)
     //xTaskCreatePinnedToCore(task1code,"task1",10000,NULL,0,&task1,0);
@@ -203,8 +204,8 @@ void rout_taskcode(void *parameter)
             //showallbool();
             //showrecord();
             //showversion();
-            // showi2cstate();
-            // showi2cdev();
+            showi2cstate();
+            showi2cdev();
             // //utctime();
             // Serial.printf("amsg timer: %s\r\n", gettimer(previousLoraAMsgMillis));
             // Serial.printf("bmsg timer: %s\r\n", gettimer(previousLoraBMsgMillis));
@@ -212,7 +213,7 @@ void rout_taskcode(void *parameter)
 
             // // Serial.printf("before update");
 
-            //wifiAPServer_routine();
+            wifiAPServer_routine();
 
             //mqtt monitor
             //mqttpub();
