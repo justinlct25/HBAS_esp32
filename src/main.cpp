@@ -55,8 +55,8 @@ unsigned long previousLoraAMsgMillis = 0;
 long LoraAMsginterval = 20000; //30 seconds
 
 unsigned long previousLoraBMsgMillis = 0;
-//long LoraBMsginterval = 300000; //5 minutes
-long LoraBMsginterval = 30000; //
+long LoraBMsginterval = 300000; //5 minutes
+//long LoraBMsginterval = 30000; //
 
 
 void init();
@@ -80,19 +80,19 @@ void setup()
     //new
     //if(!issleep) gps_init();
     //gps_init();
-    if(issleep) 
-    {
-        gps_hotstart();
-        //gps_warmstart();
-    }
-    else 
-    {
-        //gps_coolstart();
-        gps_warmstart();
-        gps_hotstart();
-    }
-
-
+    // if(issleep) 
+    // {
+    //     gps_hotstart();
+    //     //gps_warmstart();
+    // }
+    // else 
+    // {
+    //     //gps_coolstart();
+    //     //gps_warmstart();
+    //     gps_hotstart();
+    // }
+    gps_hotstart();
+    
     //Networking initialization
     //wifi_init();
     //mqtt_init();
@@ -116,7 +116,7 @@ void setup()
     // get config from NVS
     getNVSConfig();
     delay(500);
-    //Assign routine task
+    //Assign routine task 5K Byte overflow?
     xTaskCreate(rout_taskcode, "rout_task", 5000, NULL, 2, &rout_task);
     //xTaskCreate(lora_task_acode, "lora_task_a", 5000, NULL, 1, &lora_task_a);
 }
@@ -144,12 +144,12 @@ void init()
     //very important
     pinMode(17, OUTPUT);    //All module power supply
     digitalWrite(17, HIGH); //pull up
-    // pinMode(16, INPUT_PULLUP);     //battery charging signal
+    //pinMode(16, INPUT_PULLUP);     //battery charging signal
     pinMode(16, INPUT);
 
-    // //open MPU6050/Radar Power
-    // pinMode(GPIO_NUM_2, OUTPUT);
-    // digitalWrite(GPIO_NUM_2, HIGH);
+    //open MPU6050/Radar Power
+    pinMode(GPIO_NUM_2, OUTPUT);
+    digitalWrite(GPIO_NUM_2, HIGH);
     // //Red LED PIN INIT
     // pinMode(GPIO_NUM_19, OUTPUT);
     // digitalWrite(GPIO_NUM_19, HIGH);
@@ -200,8 +200,8 @@ void rout_taskcode(void *parameter)
             //showstatus();
             showgyro();
             showtof();
-            showallbool();
-            showrecord();
+            //showallbool();
+            //showrecord();
             //showversion();
             // showi2cstate();
             // showi2cdev();
@@ -228,8 +228,8 @@ void rout_taskcode(void *parameter)
             buz_operate(); //buzzer
 
             // send websocket info
-            webSocketMeasureInfo();
-            webSocketLoggerInfo();
+            //webSocketMeasureInfo();
+            //webSocketLoggerInfo();
 
 
             // Serial.println(wifi_ssid);

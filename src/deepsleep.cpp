@@ -47,7 +47,7 @@ void deepsleep_handler()
 	Serial.printf("issleep: %i\r\n", issleep);
 	if (issleep)
 	{
-		if (bat >= lowvolt && digitalRead(16) || bat >= highvolt)
+		if (((bat >= lowvolt) && (digitalRead(16))) || bat >= highvolt)
 		{
 			Serial.print("Is charging or get enough battery\r\nLeave deep sleep mode\r\n");
 			issleep = false;
@@ -123,22 +123,18 @@ void deepsleep_handler()
 
 void deepsleep_routine()
 {
-	Serial.printf("battery reading: %f\r\n", bat);
-	//GPIO16: HIGH - 插電	LOW - 未插電
-	//插電時記錄當前時間
+	//Serial.printf("battery reading: %f\r\n", bat);
+
 	if (digitalRead(16)){
 		Serial.print("charging");
 		charge_stopped = millis();
 	}
-	//電量 < lowvolt && 未插電時
 	if (bat < lowvolt)
 	{
 		Serial.println("Routine low battery deep sleep trigger");
 		routine_low_battery_sleep(long_sleep_time);
 	}
-	//電量 > low && 未插電時
-	// else if (bat > lowvolt && bat < highvolt && !digitalRead(16) && millis() - charge_stopped >= charge_interval )
-	else if (bat > lowvolt && bat < highvolt && !digitalRead(16) && millis() - charge_stopped >= charge_interval )
+	else if (bat >= lowvolt && bat < highvolt && !digitalRead(16) && millis() - charge_stopped >= charge_interval )
 	{
 		Serial.println("I should buzz then sleep");
 		routine_low_battery_sleep(long_sleep_time);
@@ -175,13 +171,14 @@ void wake_up_task_before_sleep(int time_interval, int attempts){
 
 	int start_time = millis();
 
-	Serial.printf("location: %s\r\n", location);
-
-	//001:
-	//while ( (!sLongitude[1] || !sLatitude[1] ) && millis() - start_time <= 40000){
-	while (millis() - start_time <= 40000){
+	while ((!sLongitude[1] || !sLatitude[1] ) && millis() - start_time <= 60000){
+	  	tinygps();
+		//Serial.println(millis() - start_time);
+	}
+	while (millis() - start_time <= 1000){
 	  	tinygps();
 	}
+	//Serial.println("Get GPS Time : " + (millis() - start_time));
 	showgpsinfo();
 
 	Serial.print("umsging: ");

@@ -13,6 +13,7 @@ void gps_coolstart();
 void gps_warmstart();
 void gps_hotstart();
 void gps_standby();
+void gps_wakeup();
 void tinygps();
 void showgpsinfo();
 time_t utctime();

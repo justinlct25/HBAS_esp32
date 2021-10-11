@@ -13,7 +13,6 @@ double sLat, sLong;
 char ctimestamp[15];
 unsigned long lutimestamp;
 
-
 TinyGPSPlus tgps;
 
 void gps_init()
@@ -35,27 +34,35 @@ void gps_init()
 
 void gps_coolstart()
 {
+    // = reset
     Serial2.print("$PMTK104*37\r\n");
-    Serial.print("********* GPS COOL START *********");
+    Serial.println("********* GPS COOL START *********");
 }
 
 void gps_warmstart()
 {
     Serial2.print("$PMTK102*31\r\n");
-    Serial.print("********* GPS WARM START *********");
+    Serial.println("********* GPS WARM START *********");
 }
 
 void gps_hotstart()
 {
     Serial2.print("$PMTK101*32\r\n");
-    Serial.print("********* GPS HOT START *********");
+    Serial.println("********* GPS HOT START *********");
 }
 
 void gps_standby()
 {
     //STANDBY
     Serial2.print("$PMTK161,0*28\r\n");
-    Serial.println("GPS Standby");
+    Serial.println("********* GPS Standby *********");
+}
+
+void gps_wakeup()
+{
+    //Comfirm
+    Serial2.print("$PMTK185,1*23\r\n");
+    Serial.println("********* GPS Wakeup *********");
 }
 
 void tinygps()
@@ -120,6 +127,7 @@ void tinygps()
                 ssecond = "00";
                 scentisecond = "00";
             }
+
         }
     }
 }
@@ -130,6 +138,10 @@ void showgpsinfo()
     datetime = "Data/Time: " + syear + "/" + smonth + "/" + sday + " " + shour + ":" + sminute + ":" + ssecond + "." + scentisecond;
     Serial.println(location);
     Serial.println(datetime);
+
+    //new 輸出衛星數量
+    Serial.print("Satellites : ");
+    tgps.satellites.isValid() ? Serial.println(tgps.satellites.value()) : Serial.println("0");
 }
 
 time_t utctime(){
