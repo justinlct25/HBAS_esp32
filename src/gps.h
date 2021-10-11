@@ -3,9 +3,17 @@
 
 #include <Arduino.h>
 #include "TinyGPS++.h"
+#include <ArduinoNvs.h>
+
 
 extern TinyGPSPlus tgps;
 
+void gps_init();
+void gps_coolstart();
+void gps_warmstart();
+void gps_hotstart();
+void gps_standby();
+void gps_wakeup();
 void tinygps();
 void showgpsinfo();
 time_t utctime();

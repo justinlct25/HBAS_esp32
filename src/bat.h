@@ -5,7 +5,7 @@
 #include <ESP32AnalogRead.h>
 
 //battery sample
-#define bat_sample_interval 60
+#define bat_sample_interval 1
 
 extern ESP32AnalogRead adc;
 

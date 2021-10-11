@@ -1,0 +1,119 @@
+<!DOCTYPE HTML>
+  <html>
+  <head>
+  <title>ESP Input Form</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    const configGateway = `ws://${window.location.hostname}/configSocket`;
+    const angleGateway = `ws://${window.location.hostname}/angleSocket`;
+    const distanceGateway = `ws://${window.location.hostname}/distanceSocket`;
+    const loggerGateway = `ws://${window.location.hostname}/loggerSocket`;
+    let configsocket;
+    let anglesocket;
+    let distancesocket;
+    let loggerSocket;
+    window.addEventListener('load', onLoad);
+    document.getElementById('editConfig').addEventListener("click", editConfigButtonEvent);
+    function submitMessage() {
+    }
+    function initConfigWebSocket(){
+      console.log('Trying to open a WebSocket connection...');
+      configsocket = new WebSocket(configGateway);
+      configsocket.onopen = onOpen;
+      configsocket.onclose = onClose;
+      configsocket.onmessage = onConfigMessage;
+    }
+    function initAngleWebSocket(){
+      console.log('Trying to open a AngleSocket connection...');
+      anglesocket = new WebSocket(angleGateway);
+      anglesocket.onopen = onOpen;
+      anglesocket.onclose = onClose;
+      anglesocket.onmessage = onAngleMessage;
+    }
+    function initDistanceWebSocket(){
+        console.log('Trying to open a DistanceSocket connection...');
+        distancesocket = new WebSocket(distanceGateway);
+        distancesocket.onopen = onOpen;
+        distancesocket.onclose = onClose;
+        distancesocket.onmessage = onDistanceMessage;
+    }
+    function initLoggerWebSocket(){
+        console.log('Trying to open a loggerSocket connection...');
+        loggerSocket = new WebSocket(loggerGateway);
+        loggerSocket.onopen = onOpen;
+        loggerSocket.onclose = onClose;
+        loggerSocket.onmessage = onLoggerMessage;
+    }
+    function onOpen(event) {
+      console.log('Connection opened');
+    }
+    function onClose(event) {
+      console.log('Connection closed');
+      setTimeout(initWebSocket, 2000);
+    }
+    function onConfigMessage(event) {
+      let config = event.data.split(',');
+      let distance = config[0].split(':')[1];
+      let angle = config[1].split(':')[1];
+      document.getElementById('configContainer').innerHTML = `<div>Distance: ${distance} cm</div><div>Angle: ${angle} deg</div>`;
+    }
+    function onAngleMessage(event){
+      console.log(event.data+" deg");
+      document.getElementById('currentAngle').innerHTML = `<div>Measured Angle: ${event.data} deg</div>`
+    }
+    function onDistanceMessage(event){
+      console.log(event.data+" cm");
+      document.getElementById('currentDistance').innerHTML = `<div>Measured Distance: ${event.data} cm</div>`
+    }
+    function onLoggerMessage(event){
+        console.log(event.data)
+        if(event.data=="end"){
+            document.getElementById("systemLogger").value += "\n";
+        }else{
+            document.getElementById("systemLogger").value += event.data;
+        }
+    }
+    function onLoad(event) {
+      initConfigWebSocket();
+      initAngleWebSocket();
+      initDistanceWebSocket();
+      initLoggerWebSocket();
+    }
+    function editConfigButtonEvent(){
+        document.getElementById("configContainer").innerHTML=`
+            <form action="/paramconfig" target="hidden-form">
+                Distance: <input type="text" name="inputDistance">(in cm)<br>
+                Angle : <input type="number " name="inputAngle">(in deg)<br>
+                <input type="submit" value="Submit" onclick="submitMessage()">
+            </form>`
+    }
+  </script>
+  <style>
+  textarea{
+      width:250px;
+      height:250px;
+  }
+  </style>
+  </head>
+  <body>
+  <h1>Truck Alert System Configuration</h1>
+  %CURRENTSTATUS%
+  <h3>Current Alert Threshold: </h3>
+  <div id="configContainer">
+  %CURRENTCONFIGURATION%
+  <button id="editConfig">EDIT</button>
+  </div>
+  <h3>Adjust Alert Threshold: </h3>
+  <form action="/paramconfig" target="hidden-form">
+    Distance: <input type="text" name="inputDistance">(in cm)<br>
+    Angle : <input type="number " name="inputAngle">(in deg)<br>
+    <input type="submit" value="Submit" onclick="submitMessage()">
+  </form><br>
+  <iframe style="display:none" name="hidden-form"></iframe>
+  </body>
+  <h3>Measurement of Distance & Angle: </h3>
+  <div id="currentDistance"></div>
+  <div id="currentAngle"></div> 
+  <h3>System Status Log</h3>
+  <textarea id="systemLogger" style="width:100%;height:50%;"></textarea>
+</html>

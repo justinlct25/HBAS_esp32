@@ -44,124 +44,159 @@ void deepsleep_handler()
 	getbattery();
 	Serial.printf("Boot number: %d\r\n", ++bootCount);
 	Serial.printf("Current battery: %f\r\n", bat);
+	Serial.printf("issleep: %i\r\n", issleep);
 	if (issleep)
 	{
-		if (bat >= lowvolt && digitalRead(16))
+		if (((bat >= lowvolt) && (digitalRead(16))) || bat >= highvolt)
 		{
-			Serial.print("Is charging or get enoguh battery\r\nLeave deep sleep mode\r\n");
+			Serial.print("Is charging or get enough battery\r\nLeave deep sleep mode\r\n");
 			issleep = false;
-			Serial.println("self-reboot");
-			ESP.restart(); //may not require
+			// Serial.println("self-reboot");
+			// ESP.restart(); //may not require
 		}
 		else
 		{
+			Serial.println("in wake up else statement");
 			int start_time = millis();
-			int time_interval = 12000;
+			int time_interval = 20000;
 			int attempts = 5;
-			while (!isjoin && millis() - start_time <= time_interval){
-				lora_rountine();
-			}
 
+			Serial.printf("isjoin: %i\r\n", isjoin);
 			if (!isjoin){
 				for(int i = 0; i < attempts; i++){
+					Serial.printf("iteration time: %i\r\n", i);
 					njoinlora();
 					start_time = millis();
-					while (!isjoin && millis() - start_time <= time_interval){
+					Serial.print("joining: ");
+					Serial.println(joining);
+					while ( joining && millis() - start_time <= time_interval){
 						lora_rountine();
 					}
 					if (isjoin) break;
 				}
 			}
+			Serial.printf("isjoin: %i\r\n", isjoin);
+
 			if (isjoin) {
 				Serial.println("Startup low battery deep sleep triggered with SUCCESS lora join");
 				wake_up_task_before_sleep(time_interval, attempts);
-				delay(2000);
-				// int sleep_time, dayOfWeek; 
-				// rtc.getYear() == 1970 ? dayOfWeek = 10 : dayOfWeek = rtc.getDayofWeek();
-				// Serial.println(dayOfWeek);
-				// switch (dayOfWeek)
-				// {
-				// 	case 0:
-				// 	case 6:
-				// 		sleep_time = 3600UL * 4;
-				// 		break;
-				// 	case 1:
-				// 	case 2:
-				// 	case 3:
-				// 	case 4:
-				// 	case 5:
-				// 	default:
-				// 		sleep_time = 3600UL;
-				// 		break;
-				// }
-				// Serial.printf("today is %i, sleep_time is: %i\r\n", rtc.getDayofWeek(), sleep_time);
+				delay(300);
+
+		// 		time_t now;
+		// 		struct tm timeDetails;
+		// 		time(&now);
+		// 		localtime_r(&now, &timeDetails);
+		// 		int year = timeDetails.tm_year;
+		// 		int weekday;
+		// 		year == 70 ? weekday = 10 : weekday = timeDetails.tm_wday;
+		// 		Serial.printf("year: %i", year);
+		// 		int sleep_time;
+
+		// 		switch (weekday)
+		// 		{
+		// 			case 0:
+		// 			case 6:
+		// 				sleep_time = long_sleep_time * 4;
+		// 				break;
+		// 			case 1:
+		// 			case 2:
+		// 			case 3:
+		// 			case 4:
+		// 			case 5:
+		// 			default:
+		// 				sleep_time = long_sleep_time;
+		// 				break;
+		// 		}
+		// 		Serial.printf("today is %i, sleep_time is: %i\r\n", weekday, sleep_time);
+		// 		delay(2000);
 				// routine_low_battery_sleep(sleep_time);
 				routine_low_battery_sleep(long_sleep_time);
-
 			} else {
 				Serial.println("Startup low battery deep sleep triggered with UNSUCCESS lora join");
 				delay(2000);
 				routine_low_battery_sleep(short_sleep_time);
-
 			}
-			//++bootCount;
+		// 	//++bootCount;
 		}
 	}
 }
 
 void deepsleep_routine()
 {
+	//Serial.printf("battery reading: %f\r\n", bat);
+
 	if (digitalRead(16)){
+		Serial.print("charging");
 		charge_stopped = millis();
 	}
-	if (bat < lowvolt && !digitalRead(16))
+	if (bat < lowvolt)
 	{
 		Serial.println("Routine low battery deep sleep trigger");
 		routine_low_battery_sleep(long_sleep_time);
 	}
-	else if (bat > lowvolt && !digitalRead(16) && millis() - charge_stopped >= charge_interval )
+	else if (bat >= lowvolt && bat < highvolt && !digitalRead(16) && millis() - charge_stopped >= charge_interval )
 	{
 		Serial.println("I should buzz then sleep");
-		buzzer(3);
 		routine_low_battery_sleep(long_sleep_time);
-	}
+	}       
 }
 
 void routine_low_battery_sleep(int sleep_time)
 {
-	issleep = true;
-	esp_sleep_enable_ext0_wakeup(GPIO_NUM_12, 1);
-	esp_sleep_enable_timer_wakeup(sleep_time * uS);
 	Serial.printf("Setup ESP32 to sleep for every %i Seconds\r\n", sleep_time);
+	issleep = true;
+	esp_sleep_enable_ext0_wakeup(GPIO_NUM_12, HIGH);
+	esp_sleep_enable_timer_wakeup(sleep_time * uS);
+	buzzer(3);
 	Serial.flush();
 	Serial.println("Enter Deep Sleep Mode");
 	digitalWrite(17, LOW);
 	esp_deep_sleep_start();
+	
 }
 
-void lora_task_bcode_wake_up(void * parameter){
+
+
+
+
+void lora_task_bcode_wake_up(){
   	Serial.println("loratask b");
 	nsendloramsg(encode_cmsg('B'));
 	bmsging = true;
-  	vTaskDelete(NULL);
 }
 
-void wake_up_task_before_sleep(int time_limit, int try_round){
-	xTaskCreate(lora_task_bcode_wake_up,"lora_task_b_wake_up",5000,NULL,2,&lora_task_b_wake_up);
-	umsging = true;
+void wake_up_task_before_sleep(int time_interval, int attempts){
+	Serial.println("inside wake_up_task_before_sleep");
+	delay(300);					// this is needed to ensure firm lora connection
+
 	int start_time = millis();
-	while (umsging && millis() - start_time <= time_limit){
-		lora_rountine();
+
+	while ((!sLongitude[1] || !sLatitude[1] ) && millis() - start_time <= 60000){
+	  	tinygps();
+		//Serial.println(millis() - start_time);
 	}
-	if (umsging){
-		Serial.println("b message send fail, going to re-send");
-		for (int i = 0; i < try_round; i ++){
-			xTaskCreate(lora_task_bcode_wake_up,"lora_task_b_wake_up",5000,NULL,2,&lora_task_b_wake_up);
+	while (millis() - start_time <= 1000){
+	  	tinygps();
+	}
+	//Serial.println("Get GPS Time : " + (millis() - start_time));
+	showgpsinfo();
+
+	Serial.print("umsging: ");
+	Serial.println(umsging);
+	if (!umsging){
+		for (int i = 0; i < attempts; i ++){
+			Serial.printf("-attempt is: %i-\r\n", i);
+			Serial.printf("umsging before function: %i", umsging);
+			lora_task_bcode_wake_up();
 			start_time = millis();
-			while (umsging && millis() - start_time <= time_limit){
+			Serial.printf("umsging after function: %i\r\n", umsging);
+			while (umsging && millis() - start_time <= time_interval){
 				lora_rountine();
 			}
-			if(!umsging) break;
+			if(!umsging){
+				Serial.println("leaving for loop");
+				break;
+			} 
 		}
 	}
 }

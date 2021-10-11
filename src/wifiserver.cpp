@@ -190,18 +190,18 @@ void wifiServer_run(){
     IPAddress IP = WiFi.softAPIP();
     Serial.print("IP Address: ");
     Serial.println(IP);
-    server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+    server.on("/", HTTPP_GET, [](AsyncWebServerRequest *request){
       request->send_P(200, "text/html", index_html, processor);
       // request->send_P(200, "text/html", index_html);
     });
-    server.on("/current", HTTP_GET, [](AsyncWebServerRequest *request){
+    server.on("/current", HTTPP_GET, [](AsyncWebServerRequest *request){
       Serial.print("current");
       char tempDistance=(char)lim_distance;
       Serial.println(tempDistance);
       request->send_P(200, "text/plain", &tempDistance);
     });
     // Send a GET request to <ESP_IP>/config?inputString=<inputMessage>
-    server.on("/config", HTTP_GET, [] (AsyncWebServerRequest *request) {
+    server.on("/config", HTTPP_GET, [] (AsyncWebServerRequest *request) {
       int tempDistance;
       int tempAngle;
       bool validDistance = false;

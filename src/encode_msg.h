@@ -2,6 +2,9 @@
 #define _ENCODE_MSG_H_
 
 #include <Arduino.h>
+#include <gps.h>
+#include <string>
+#include "deepsleep.h"
 
 extern String sday, smonth, syear;
 extern String shour, sminute, ssecond, scentisecond;

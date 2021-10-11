@@ -22,7 +22,11 @@
 #include "deepsleep.h"
 #include "checki2c.h"
 #include "timer.h"
+#include "wifista_update.h"
+#include "wifiap_server.h"
+#include <ArduinoNvs.h>
 #include "wifiserver.h"
+
 
 //core
 TaskHandle_t task1;
@@ -50,13 +54,13 @@ unsigned long previousMillis = 0;
 const long interval = 1000; //1 second
 
 unsigned long previousLoraAMsgMillis = 0;
-long LoraAMsginterval = 30000; //30 seconds
+// long LoraAMsginterval = 30000; //30 seconds
+long LoraAMsginterval = 20000; //30 seconds
 
 unsigned long previousLoraBMsgMillis = 0;
-long LoraBMsginterval = 900000; //15 minutes
+long LoraBMsginterval = 300000; //5 minutes
+// long LoraBMsginterval = 30000; //
 
-unsigned long previousWifiMillis = 0;
-long Wifiinterval = 3600000; //1 hour
 
 void init();
 
@@ -65,7 +69,6 @@ void setup()
     //watchdog
     // esp_task_wdt_init(60, true); //enable panic so ESP32 restarts
     // esp_task_wdt_add(NULL); //add current thread to WDT watch
-
     init();
     bat_init();
 
@@ -77,11 +80,31 @@ void setup()
     tof_init();
     gyro_init();
 
+    //new
+    //if(!issleep) gps_init();
+    //gps_init();
+    // if(issleep) 
+    // {
+    //     gps_hotstart();
+    //     //gps_warmstart();
+    // }
+    // else 
+    // {
+    //     //gps_coolstart();
+    //     //gps_warmstart();
+    //     gps_hotstart();
+    // }
+    gps_hotstart();
+    
     //Networking initialization
-    // wifi_init();
+    //wifi_init();
     //mqtt_init();
     //bt_init();
-    njoinlora();
+    //njoinlora();
+
+
+    // wifiapserver
+    wifiAPServer_init();
 
     // get config from NVS
     getNVSConfig();
@@ -91,111 +114,35 @@ void setup()
 
     //core (legacy function)
     //xTaskCreatePinnedToCore(task1code,"task1",10000,NULL,0,&task1,0);
+    // Serial.println("issleep2:");
+	// Serial.println(issleep);
+
     deepsleep_handler();
 
-    //Assign routine task
+    // get config from NVS
+    getNVSConfig();
+    delay(500);
+    //Assign routine task 5K Byte overflow?
     xTaskCreate(rout_taskcode, "rout_task", 5000, NULL, 2, &rout_task);
-    xTaskCreate(lora_task_acode, "lora_task_a", 5000, NULL, 1, &lora_task_a);
-
-    //tof xshut io (may not need)
-    pinMode(23, OUTPUT);
-    digitalWrite(23, HIGH);
+    //xTaskCreate(lora_task_acode, "lora_task_a", 5000, NULL, 1, &lora_task_a);
 }
 
 void loop()
 {
     //Handle lora transmission status
     lora_rountine();
-
-    //legacy function
-    //lora alert msg
-    // if(isalert){
-    //     //tmsg=encode_fmsg("A");
-    //     //strcpy(arecord[recordCounter],tmsg.c_str());
-    //     strcpy(arecord[recordCounter],encode_cmsg('A'));
-    //     recordCounter++;
-    //     previousTimeoutMillis=millis();
-    //     while(!isbrake && timeout(previousTimeoutMillis));
-    //     alerted=true;
-    //   if(!isjoin){
-    //     //Serial.println("Not in LoRaWan. Rejoining LoRaWan...");
-    //     njoinlora();
-    //     //LoraAMsginterval = 30000;
-    //   }
-    //   else{
-    //     Serial.println("Lora alert msg sent");
-    //     //sendloracmsg(tmsg);
-    //     nsendloracmsg(arecord[recordCounter-1]);
-    //     if(isretry){
-    //       Serial.println("Retry in 30s");
-    //       alerted=true;
-    //       //LoraAMsginterval = 30000;
-    //     }
-    //     else{
-    //       Serial.println("ack received");
-    //       recordCounter--;//
-    //       if(recordCounter == 0){
-    //         alerted=false;
-    //         //LoraAMsginterval = 300000;
-    //       }
-    //       else{
-    //         LoraAMsginterval = 30000;
-    //       }
-    //     }
-    //   }
-    // }
-    //
-    // if(alerted){
-    //   unsigned long currentLoraAMSGMillis = millis();
-    //   if(currentLoraAMSGMillis - previousLoraAMsgMillis >= LoraAMsginterval){
-    //     Serial.println("LORA AMSG LOOP");
-    //     if(!isjoin){
-    //       Serial.println("Not in LoRaWan. Rejoining LoRaWan...");
-    //       njoinlora();
-    //       LoraAMsginterval = 30000;
-    //     }
-    //     if(recordCounter>0){
-    //       Serial.println("Get stored alert msg and send");
-    //       //String tmsg=arecord[recordCounter-1];
-    //       Serial.printf("Resend msg %d\r\n",recordCounter-1);
-    //       //sendloracmsg(tmsg);
-    //       sendloracmsg(arecord[recordCounter-1]);
-    //       if(isretry){
-    //         Serial.println("Retry in 30s");
-    //         LoraAMsginterval = 30000;
-    //         Serial.printf("%d records are not sent\r\n",recordCounter);
-    //       }
-    //       else{
-    //         Serial.println("ack received");
-    //         Serial.printf("msg %d sent\r\n",recordCounter-1);
-    //         recordCounter--;
-    //       }
-    //     }
-    //     else{
-    //       LoraAMsginterval = 300000;
-    //       alerted=false;
-    //     }
-    //     previousLoraAMsgMillis = currentLoraAMSGMillis;
-    //   }
-    // }
-    //
-    //lora routine battery msg
-    // unsigned long currentLoraBMSGMillis = millis();
-    // if(currentLoraBMSGMillis - previousLoraBMsgMillis >= LoraBMsginterval){
-    //   Serial.println("LORA BMSG LOOP");
-    //   //tmsg=encode_fmsg("B");
-    //   strcpy(bmsg,encode_cmsg('B'));
-    //   if(!isjoin){
-    //     //Serial.println("Not in LoRaWan. Rejoining LoRaWan...");
-    //     njoinlora();
-    //   }
-    //   else{
-    //     Serial.println("routine LoRa battery msg sent");
-    //     nsendloracmsg(bmsg);
-    //     bmsging = true;
-    //   }
-    //   previousLoraBMsgMillis = currentLoraBMSGMillis;
-    // }
+    // wifista_update();
+    // deepsleep_routine();
+    //if((millis() / 1000) > 30 && (millis() / 1000) < 31) gps_standby();
+    //if((millis() / 1000) > 30 && (millis() / 1000) < 31) gps_standby();
+    //if((millis() / 1000) > 31 && (millis() / 1000) < 32) gps_hotstart();
+    
+    if(bat < 3.5){
+        pinMode(3, OUTPUT);
+    }
+    else{
+        pinMode(3, INPUT);
+    }
 }
 
 void init()
@@ -203,17 +150,39 @@ void init()
     //very important
     pinMode(17, OUTPUT);    //All module power supply
     digitalWrite(17, HIGH); //pull up
-    pinMode(16, INPUT);     //battery charging signal
+    //pinMode(16, INPUT_PULLUP);     //battery charging signal
+    pinMode(16, INPUT);
+
+    //open MPU6050/Radar Power
+    pinMode(GPIO_NUM_2, OUTPUT);
+    digitalWrite(GPIO_NUM_2, HIGH);
+    // //Red LED PIN INIT
+    // pinMode(GPIO_NUM_19, OUTPUT);
+    // digitalWrite(GPIO_NUM_19, HIGH);
+
+    // //tof xshut io (may not need)
+    pinMode(23, OUTPUT);
+    digitalWrite(23, HIGH);
+
+    
     Serial.begin(115200);
-    //very important
 }
 
 void rout_taskcode(void *parameter)
 {
     for (;;)
     {
+
         if (millis() - previousMillis >= interval)
         {
+        //     Serial.print("NVS.getString(latitude)");
+        //     Serial.println(NVS.getString("latitude"));
+        //     Serial.print("NVS.getBlobSize(latitude)");
+        //     Serial.println(NVS.getBlobSize("latitude"));
+
+        //             unsigned short usStackHighWaterMark;
+        // Serial.print(xPortGetFreeHeapSize());
+
             previousMillis = millis();
             //Necessary checking
             i2cdev_restore();
@@ -223,28 +192,33 @@ void rout_taskcode(void *parameter)
             person();
             checkrot2();
             samplebattery();
+
             tinygps();
 
             //Debug printing
             //Serial.print("\f");  //new page for some serial monitor
             //Serial.printf(">>>>>> run on core %d  stack: %d\r\n",xPortGetCoreID(),uxTaskGetStackHighWaterMark(NULL));
             Serial.printf("-------------uptime: %s-------------\r\n", getuptime());
-            //showgpsinfo();
+            showgpsinfo();
             showbattery();
             //Serial.printf("wifi status: %d , RSSI: %d\r\n",wifi_stat(),wifi_strength());
             //Serial.printf("io16: %d\r\n",digitalRead(16));
             //showstatus();
             showgyro();
             showtof();
-            showallbool();
-            showrecord();
+            //showallbool();
+            //showrecord();
             //showversion();
-            //showi2cstate();
-            //showi2cdev();
-            //utctime();
-            Serial.printf("amsg timer: %s\r\n", gettimer(previousLoraAMsgMillis));
-            Serial.printf("bmsg timer: %s\r\n", gettimer(previousLoraBMsgMillis));
+            showi2cstate();
+            showi2cdev();
+            // //utctime();
+            // Serial.printf("amsg timer: %s\r\n", gettimer(previousLoraAMsgMillis));
+            // Serial.printf("bmsg timer: %s\r\n", gettimer(previousLoraBMsgMillis));
             showlora();
+
+            // // Serial.printf("before update");
+
+            wifiAPServer_routine();
 
             //mqtt monitor
             //mqttpub();
@@ -259,12 +233,16 @@ void rout_taskcode(void *parameter)
             led_operate(); //LED
             buz_operate(); //buzzer
 
-            //send websocket
-            webSocketMeasureInfo();
-            webSocketLoggerInfo();
+            // send websocket info
+            //webSocketMeasureInfo();
+            //webSocketLoggerInfo();
 
-            Serial.println(lim_distance);
-            Serial.println(lim_angle);
+
+            // Serial.println(wifi_ssid);
+            // Serial.println(wifi_password);
+            // Serial.println(update_server_url);
+            // Serial.println(version_url);
+            // Serial.println(bin_url);
 
             //deep sleep
             deepsleep_routine();
@@ -324,6 +302,7 @@ void rout_taskcode(void *parameter)
         {
             bmsging = false;
         }
+
     }
 }
 
@@ -381,91 +360,3 @@ void lora_task_bcode(void *parameter)
     vTaskDelete(NULL);
 }
 
-void task1code(void *parameter)
-{ //legacy function
-    for (;;)
-    {
-        //routine checking
-        unsigned long currentMillis = millis();
-        if (currentMillis - previousMillis >= interval)
-        {
-            previousMillis = currentMillis;
-            //Serial.print("\f");
-            i2cdev_restore();
-            getdistance();
-            gyro_update();
-            calrot3();
-            person();
-            checkrot2();
-            samplebattery();
-            tinygps();
-
-            //debug section
-            //Serial.printf(">>>>>> run on core %d  stack: %d\r\n",xPortGetCoreID(),uxTaskGetStackHighWaterMark(NULL));
-            Serial.printf("----------------uptime: %s----------------\r\n", getuptime());
-            showgpsinfo();
-            showbattery();
-            //Serial.printf("wifi status: %d , RSSI: %d\r\n",wifi_stat(),wifi_strength());
-            //Serial.printf("io16: %d\r\n",digitalRead(16));
-            //showstatus();
-            //showgyro();
-            //showtof();
-            //showallbool();
-            //showrecord();
-            //showversion();
-            //showi2cstate();
-            //showi2cdev();
-            //utctime();
-            //showlora();
-
-            //mqtt monitor
-            //mqttpub();
-
-            //bluetooth terminal
-            // bt.printf("      ----------uptime: %s----------      \r\n",getuptime());
-            // BTshowstatus();
-            // BTshowrecord();
-            // BTshowallbool();
-
-            led_operate(); //LED
-            buz_operate(); //buzzer
-            
-
-            //deep sleep
-            deepsleep_routine();
-
-        } //end 1 second
-
-        /*//wifi connection and ota
-  unsigned long currentWifiMillis = millis();
-  if(currentWifiMillis - previousWifiMillis >= Wifiinterval){
-    previousWifiMillis = currentWifiMillis;
-    Serial.println("Check wifi status");
-    if(!wifi_stat()){
-      wifi_reconnect();
-      Serial.println("Reconnecting to wifi");
-      Serial.printf("wifi status: %d , RSSI: %d\r\n",wifi_stat(),wifi_strength());
-    }
-    else{ 
-      Serial.printf("latest version: %s\r\n",http_version_check());
-      version_check();
-      if(!islateset){
-        Serial.println("got lateset version");
-        if(!isstartup){
-          ota_update();
-          isstartup = true;
-        }
-        else{
-          ota_status();
-        }
-      }
-    }
-  }*/
-        //bt_routine();
-        //bt_quit();
-
-        //buz.cbuz_routine();
-        blueled.cled_routine();
-        yellowled.cled_routine();
-    }
-}

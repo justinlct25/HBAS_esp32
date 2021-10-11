@@ -1,23 +1,16 @@
 #include "wifi_c.h"
 
-const char *ssid = "trash";                          // "REPLACE_WITH_YOUR_SSID";
-const char *password = "68901210";                   // "REPLACE_WITH_YOUR_PASSWORD";
-
-//Week Days
-const String weekDays[7]={"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
-
-//Month names
-const String months[12]={"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"};
+char wifi_ssid[1000] = "trash";                          // "REPLACE_WITH_YOUR_SSID";
+char wifi_password[100] = "12345678";                   // "REPLACE_WITH_YOUR_PASSWORD";
 
 // these are for NTPClient connection
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "0.hk.pool.ntp.org", 3600 * 8);
-ESP32Time rtc;
 
 
 void wifi_init()
 {
-    WiFi.begin(ssid, password);
+    WiFi.begin(wifi_ssid, wifi_password);
     WiFi.setAutoReconnect(true);
     WiFi.persistent(true);
     int start_time = millis();
@@ -32,11 +25,12 @@ void wifi_init()
 
     if (wifi_stat()){
         Serial.println("Have wifi connection");
+        struct timeval tv;
         timeClient.update();
         unsigned long epochTime = timeClient.getEpochTime();        // obtain time information from internet
-        rtc.setTime(epochTime);                                     // turn the curled time to esp32 local
+        tv.tv_sec = epochTime;
+        settimeofday(&tv, NULL);
     }
-    Serial.println(rtc.getDateTime(true));
 
 }
 
@@ -53,7 +47,7 @@ bool wifi_stat() // connected will return true
 void wifi_reconnect() //please give this function sometime to run before rerun
 {
     WiFi.disconnect();
-    WiFi.begin(ssid, password);
+    WiFi.begin(wifi_ssid, wifi_password);
 }
 
 int wifi_strength()
