@@ -44,7 +44,7 @@ void deepsleep_handler()
 	getbattery();
 	Serial.printf("Boot number: %d\r\n", ++bootCount);
 	Serial.printf("Current battery: %f\r\n", bat);
-	Serial.printf("issleep: %i\r\n", issleep);
+	//Serial.printf("issleep: %i\r\n", issleep);
 	if (issleep)
 	{
 		if (((bat >= lowvolt) && (digitalRead(16))) || bat >= highvolt)
@@ -61,7 +61,7 @@ void deepsleep_handler()
 			int time_interval = 20000;
 			int attempts = 5;
 
-			Serial.printf("isjoin: %i\r\n", isjoin);
+			//Serial.printf("isjoin: %i\r\n", isjoin);
 			if (!isjoin){
 				for(int i = 0; i < attempts; i++){
 					Serial.printf("iteration time: %i\r\n", i);
@@ -75,7 +75,7 @@ void deepsleep_handler()
 					if (isjoin) break;
 				}
 			}
-			Serial.printf("isjoin: %i\r\n", isjoin);
+			//Serial.printf("isjoin: %i\r\n", isjoin);
 
 			if (isjoin) {
 				Serial.println("Startup low battery deep sleep triggered with SUCCESS lora join");
@@ -126,7 +126,7 @@ void deepsleep_routine()
 	//Serial.printf("battery reading: %f\r\n", bat);
 
 	if (digitalRead(16)){
-		Serial.print("charging");
+		//Serial.print("charging");
 		charge_stopped = millis();
 	}
 	if (bat < lowvolt)
@@ -143,13 +143,15 @@ void deepsleep_routine()
 
 void routine_low_battery_sleep(int sleep_time)
 {
+	gps_standby();
 	Serial.printf("Setup ESP32 to sleep for every %i Seconds\r\n", sleep_time);
 	issleep = true;
 	esp_sleep_enable_ext0_wakeup(GPIO_NUM_12, HIGH);
 	esp_sleep_enable_timer_wakeup(sleep_time * uS);
-	buzzer(3);
+	//buzzer(3);
 	Serial.flush();
 	Serial.println("Enter Deep Sleep Mode");
+	Serial.println("End Time : " + String(millis()));
 	digitalWrite(17, LOW);
 	esp_deep_sleep_start();
 	
@@ -175,10 +177,8 @@ void wake_up_task_before_sleep(int time_interval, int attempts){
 	  	tinygps();
 		//Serial.println(millis() - start_time);
 	}
-	while (millis() - start_time <= 1000){
-	  	tinygps();
-	}
-	//Serial.println("Get GPS Time : " + (millis() - start_time));
+
+	Serial.println("Get GPS Time : " + String(millis() - start_time));
 	showgpsinfo();
 
 	Serial.print("umsging: ");

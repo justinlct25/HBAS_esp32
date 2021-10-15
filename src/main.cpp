@@ -56,11 +56,7 @@ long LoraAMsginterval = 20000; //30 seconds
 
 unsigned long previousLoraBMsgMillis = 0;
 long LoraBMsginterval = 300000; //5 minutes
-<<<<<<< HEAD
 //long LoraBMsginterval = 30000; //
-=======
-// long LoraBMsginterval = 30000; //
->>>>>>> e2b778cf965ac7a737b0161533b4e6dae0bbd5f3
 
 
 void init();
@@ -84,18 +80,15 @@ void setup()
     //new
     //if(!issleep) gps_init();
     //gps_init();
-    // if(issleep) 
-    // {
-    //     gps_hotstart();
-    //     //gps_warmstart();
-    // }
-    // else 
-    // {
-    //     //gps_coolstart();
-    //     //gps_warmstart();
-    //     gps_hotstart();
-    // }
-    gps_hotstart();
+    if(bootCount == 0) 
+    {
+        gps_coolstart();//20-40s +
+    }
+    else 
+    {
+        gps_hotstart();//5s +
+    }
+    //gps_hotstart();
     
     //Networking initialization
     //wifi_init();
@@ -105,7 +98,7 @@ void setup()
 
 
     // wifiapserver
-    wifiAPServer_init();
+    //wifiAPServer_init();
 
     //core (legacy function)
     //xTaskCreatePinnedToCore(task1code,"task1",10000,NULL,0,&task1,0);
@@ -126,12 +119,11 @@ void loop()
 {
     //Handle lora transmission status
     lora_rountine();
+
+    tinygps();
     // wifista_update();
     // deepsleep_routine();
-    //if((millis() / 1000) > 30 && (millis() / 1000) < 31) gps_standby();
-    //if((millis() / 1000) > 30 && (millis() / 1000) < 31) gps_standby();
-    //if((millis() / 1000) > 31 && (millis() / 1000) < 32) gps_hotstart();
-    
+
     if(bat < 3.5){
         pinMode(3, OUTPUT);
     }
@@ -167,7 +159,6 @@ void rout_taskcode(void *parameter)
 {
     for (;;)
     {
-
         if (millis() - previousMillis >= interval)
         {
         //     Serial.print("NVS.getString(latitude)");
@@ -180,7 +171,7 @@ void rout_taskcode(void *parameter)
 
             previousMillis = millis();
             //Necessary checking
-            i2cdev_restore();
+            //i2cdev_restore();
             getdistance();
             gyro_update();
             calrot3();
@@ -188,7 +179,7 @@ void rout_taskcode(void *parameter)
             checkrot2();
             samplebattery();
 
-            tinygps();
+            // tinygps();
 
             //Debug printing
             //Serial.print("\f");  //new page for some serial monitor
@@ -204,8 +195,8 @@ void rout_taskcode(void *parameter)
             //showallbool();
             //showrecord();
             //showversion();
-            showi2cstate();
-            showi2cdev();
+            //showi2cstate();
+            //showi2cdev();
             // //utctime();
             // Serial.printf("amsg timer: %s\r\n", gettimer(previousLoraAMsgMillis));
             // Serial.printf("bmsg timer: %s\r\n", gettimer(previousLoraBMsgMillis));
@@ -213,7 +204,7 @@ void rout_taskcode(void *parameter)
 
             // // Serial.printf("before update");
 
-            wifiAPServer_routine();
+            if(bat >= highvolt) wifiAPServer_routine();
 
             //mqtt monitor
             //mqttpub();
@@ -229,8 +220,8 @@ void rout_taskcode(void *parameter)
             buz_operate(); //buzzer
 
             // send websocket info
-            //webSocketMeasureInfo();
-            //webSocketLoggerInfo();
+            webSocketMeasureInfo();
+            webSocketLoggerInfo();
 
 
             // Serial.println(wifi_ssid);
@@ -268,15 +259,15 @@ void rout_taskcode(void *parameter)
         //lora task a
         if (millis() - previousLoraAMsgMillis >= LoraAMsginterval)
         {
-            xTaskCreate(lora_task_acode, "lora_task_a", 5000, NULL, 2, &lora_task_a);
             previousLoraAMsgMillis = millis();
+            xTaskCreate(lora_task_acode, "lora_task_a", 5000, NULL, 2, &lora_task_a);
         }
 
         //lora task b
-        if (millis() - previousLoraBMsgMillis >= LoraBMsginterval)
+        if (millis() - previousLoraBMsgMillis >= LoraBMsginterval && millis() > 60000)
         {
-            xTaskCreate(lora_task_bcode, "lora_task_b", 5000, NULL, 2, &lora_task_b);
             previousLoraBMsgMillis = millis();
+            xTaskCreate(lora_task_bcode, "lora_task_b", 5000, NULL, 2, &lora_task_b);
         }
 
         //check amsg stauts

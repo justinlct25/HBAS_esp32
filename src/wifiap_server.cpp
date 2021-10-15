@@ -3,6 +3,7 @@
 
 unsigned long quit_time_wifiap = 300000UL; // 5 minutes
 
+const char* APip = "0.0.0.0";
 
 bool wifi_inited = false;
 char wifi_ap_ssid[200] = "Handbrake-Alert-System";
@@ -266,16 +267,15 @@ void wifiWebSocket_init(){
 
 
 void wifiAPServer_init(){
-  Serial.print(wifi_ap_ssid);
+  Serial.println(wifi_ap_ssid);
     WiFi.softAP(wifi_ap_ssid, wifi_ap_password);
     if(!MDNS.begin("handbrake")){
     Serial.println("Error starting mDNS");
     return;
   }
     wifiWebSocket_init();
-    IPAddress IP = WiFi.softAPIP();
     Serial.print("IP Address: ");
-    Serial.println(IP);
+    Serial.println(WiFi.softAPIP());
     server.on("/", HTTPP_GET, [](AsyncWebServerRequest *request){
       request->send_P(200, "text/html", index_html, processor);
       // request->send_P(200, "text/html", index_html);
@@ -349,7 +349,7 @@ void wifiAPServer_init(){
     });
     server.onNotFound(notFound);
     server.begin();
-    AsyncElegantOTA.begin(&server);
+    //AsyncElegantOTA.begin(&server);
 }
 
 
@@ -379,17 +379,20 @@ void SerialPrintLimitDistanceAngle(){
 void wifiAPServer_routine(){
   if (millis()<=quit_time_wifiap){
   // if (bat >= highvolt){
-    Serial.print("wifiapstatusstarted");
-    Serial.print(WiFi.softAPgetStationNum());
     // if(wifi_inited==false && WiFi.softAPgetStationNum()==0){
-    if(WiFi.softAPgetStationNum()==0){
-      Serial.print("wifiinit");
+    if(WiFi.softAPIP().toString().equals(APip)){
+      Serial.println("wifiinit");
       wifiAPServer_init();
       wifi_inited = true;
     }
   } else{
-    Serial.print("wifiapstatusclose");
-    Serial.print(WiFi.softAPgetStationNum());
+    //Serial.println("wifiapstatusclose");
+    //Serial.print(WiFi.softAPgetStationNum());
+    WiFi.softAPdisconnect(true);
+    wifi_inited = false;
+  }
+  if(bat < highvolt)
+  {
     WiFi.softAPdisconnect(true);
     wifi_inited = false;
   }

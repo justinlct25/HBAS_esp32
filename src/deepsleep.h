@@ -23,7 +23,7 @@
 #define lowvolt 3.9
 // #define lowvolt 3.8001                                       // for testing
 #define highvolt 4.08
-#define charge_interval 1000 * 60 * 20
+#define charge_interval 1000 * 60 * 10
 // #define charge_interval 1000 * 60 * 5	                        // for testing
 //#define charge_interval 1000 * 10	                        // for testing
 
