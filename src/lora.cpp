@@ -23,6 +23,10 @@ bool amsgsuc = false;
 bool bmsging = false;
 //bool bmsgsuc = false;
 
+
+int rssi = 0;
+int snr = 0;
+
 //new development
 void manuallora(){
     if(Serial.available()>0){
@@ -87,7 +91,27 @@ void lora_rountine(){
             umsging = false;
             cmsging = false;
         }
-        
+
+        //RSSI & SNR 
+        if(strstr(input, "RSSI") !=NULL){
+            char *RSSInSNR = strstr(input, "RSSI");
+            char *token = strtok(RSSInSNR, ", ");
+            int count = 0;
+            char *RSSIstr = "";
+            char *SNRstr = "";
+            while(token != NULL){
+                if(count==1){
+                    rssi = atoi(token);
+                }else if(count==3){
+                    snr = atoi(token);
+                }
+                count++;
+                token = strtok(NULL, ", ");
+            }
+            Serial.println("rssi&snr: ");
+            Serial.println(String(rssi));
+            Serial.println(String(snr));
+        }
         memset(input,'\0',sizeof(input));
         inn=0;
         ln=NULL;
@@ -106,9 +130,11 @@ void njoinlora(){
 }
 
 void nsendloramsg(char *msg){
-    lora.printf("AT+MSG=\"%s\"\r\n",msg);
+    lora.printf("AT+CMSG=\"%s\"\r\n",msg);
     //lora.flush();
-    umsging = true;
+    //umsging = true;
+    isack = false;
+    cmsging = true;
 }
 
 void nsendloracmsg(char *msg){

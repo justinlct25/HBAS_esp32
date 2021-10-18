@@ -182,18 +182,18 @@ void wake_up_task_before_sleep(int time_interval, int attempts){
 	showgpsinfo();
 
 	Serial.print("umsging: ");
-	Serial.println(umsging);
-	if (!umsging){
+	Serial.println(cmsging);
+	if (!cmsging){
 		for (int i = 0; i < attempts; i ++){
 			Serial.printf("-attempt is: %i-\r\n", i);
-			Serial.printf("umsging before function: %i", umsging);
+			Serial.printf("umsging before function: %i", cmsging);
 			lora_task_bcode_wake_up();
 			start_time = millis();
-			Serial.printf("umsging after function: %i\r\n", umsging);
-			while (umsging && millis() - start_time <= time_interval){
+			Serial.printf("umsging after function: %i\r\n", cmsging);
+			while (cmsging && millis() - start_time <= time_interval){
 				lora_rountine();
 			}
-			if(!umsging){
+			if(!cmsging){
 				Serial.println("leaving for loop");
 				break;
 			} 

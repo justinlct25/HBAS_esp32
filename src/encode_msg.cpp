@@ -1,6 +1,6 @@
 #include "encode_msg.h"
 
-char testmsg[60];
+char testmsg[70];
 
 char *encode_cmsg(char msgtype){
   char h_timestamp[10];
@@ -8,7 +8,9 @@ char *encode_cmsg(char msgtype){
   char h_longitude[10];
   char h_bat[4];
   char h_msgtype=msgtype;
-  memset(testmsg,'\0',60);
+  char h_rssi[5];
+  char h_snr[5];
+  memset(testmsg,'\0',70);
   sprintf(h_timestamp,"%x",(unsigned int)utctime());
   // if(issleep){
   //   // Serial.print("NVSgggg");
@@ -22,13 +24,8 @@ char *encode_cmsg(char msgtype){
     // Serial.println(NVS.getString("longitude").toFloat());
 
   // }else{
-    sprintf(h_latitude,"%x",(unsigned int)(((sLatitude.toFloat())+90)*1000000));
-    sprintf(h_longitude,"%x",(unsigned int)(((sLongitude.toFloat())+180)*1000000));
-
-    // Serial.printf("%s\r\n",h_latitude);
-    // Serial.printf("%s\r\n",h_longitude);
-    // Serial.println((int)(((sLatitude.toFloat())+90)*1000000));
-    // Serial.println((int)(((sLongitude.toFloat())+180)*1000000));
+    sprintf(h_latitude,"%x",(int)(((sLatitude.toFloat())+90)*1000000));
+    sprintf(h_longitude,"%x",(int)(((sLongitude.toFloat())+180)*1000000));
   // }
   // Serial.println("outside 0");
   // Serial.println(str(h_latitude));
@@ -42,11 +39,10 @@ char *encode_cmsg(char msgtype){
   // Serial.print("inside 0");
   
   // }
-  sprintf(h_bat,"%x",bat2);
-  sprintf(testmsg,"%s;%s;%s;%s;%c",h_timestamp,h_latitude,h_longitude,h_bat,h_msgtype);
-  
-  
 
+  sprintf(h_bat,"%x",bat2);
+  sprintf(testmsg,"%s;%s;%s;%s;%c;%s;%s",h_timestamp,h_latitude,h_longitude,h_bat,h_msgtype,h_rssi,h_snr);
+  
   return testmsg;
 }
 

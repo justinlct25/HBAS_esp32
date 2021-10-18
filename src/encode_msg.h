@@ -20,7 +20,7 @@ extern int bat2;
 
 extern char ctimestamp[15];
 extern time_t utctime();
-extern char testmsg[60];
+extern char testmsg[70];
 
 char *encode_cmsg(char);
 

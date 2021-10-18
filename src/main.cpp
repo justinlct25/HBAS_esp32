@@ -33,10 +33,10 @@ TaskHandle_t task1;
 //task
 TaskHandle_t rout_task;
 void rout_taskcode(void *);
-TaskHandle_t lora_task_a;
-void lora_task_acode(void *);
-TaskHandle_t lora_task_b;
-void lora_task_bcode(void *);
+//TaskHandle_t lora_task_a;
+void lora_task_acode();
+//TaskHandle_t lora_task_b;
+void lora_task_bcode();
 
 //Queue record
 bool alerted = false;
@@ -55,8 +55,8 @@ unsigned long previousLoraAMsgMillis = 0;
 long LoraAMsginterval = 20000; //30 seconds
 
 unsigned long previousLoraBMsgMillis = 0;
-long LoraBMsginterval = 300000; //5 minutes
-//long LoraBMsginterval = 30000; //
+//long LoraBMsginterval = 300000; //5 minutes
+long LoraBMsginterval = 10000; //
 
 
 void init();
@@ -73,7 +73,7 @@ void setup()
     Serial2.begin(9600, SERIAL_8N1, 32, 33); //serial for gps
     lora.begin(9600);                        //serial for lora
     delay(2000);                             //2s delay for lora initialize (should use)
-    buzzer_init();
+    //buzzer_init();
     tof_init();
     gyro_init();
 
@@ -124,12 +124,21 @@ void loop()
     // wifista_update();
     // deepsleep_routine();
 
-    if(bat < 3.5){
-        pinMode(3, OUTPUT);
-    }
-    else{
-        pinMode(3, INPUT);
-    }
+        //lora task a
+        if (millis() - previousLoraAMsgMillis >= LoraAMsginterval)
+        {
+            previousLoraAMsgMillis = millis();
+            //xTaskCreate(lora_task_acode, "lora_task_a", 5000, NULL, 2, &lora_task_a);
+            lora_task_acode();
+        }
+
+        //lora task b
+        if (millis() - previousLoraBMsgMillis >= LoraBMsginterval)// && millis() > 60000)
+        {
+            previousLoraBMsgMillis = millis();
+            //xTaskCreate(lora_task_bcode, "lora_task_b", 5000, NULL, 2, &lora_task_b);
+            lora_task_bcode();
+        }
 }
 
 void init()
@@ -185,13 +194,13 @@ void rout_taskcode(void *parameter)
             //Serial.print("\f");  //new page for some serial monitor
             //Serial.printf(">>>>>> run on core %d  stack: %d\r\n",xPortGetCoreID(),uxTaskGetStackHighWaterMark(NULL));
             Serial.printf("-------------uptime: %s-------------\r\n", getuptime());
-            showgpsinfo();
-            showbattery();
+            // showgpsinfo();
+            // showbattery();
             //Serial.printf("wifi status: %d , RSSI: %d\r\n",wifi_stat(),wifi_strength());
             //Serial.printf("io16: %d\r\n",digitalRead(16));
             //showstatus();
-            showgyro();
-            showtof();
+            // showgyro();
+            // showtof();
             //showallbool();
             //showrecord();
             //showversion();
@@ -200,11 +209,11 @@ void rout_taskcode(void *parameter)
             // //utctime();
             // Serial.printf("amsg timer: %s\r\n", gettimer(previousLoraAMsgMillis));
             // Serial.printf("bmsg timer: %s\r\n", gettimer(previousLoraBMsgMillis));
-            showlora();
+            // showlora();
 
             // // Serial.printf("before update");
 
-            if(bat >= highvolt) wifiAPServer_routine();
+            //if(bat >= highvolt) wifiAPServer_routine();
 
             //mqtt monitor
             //mqttpub();
@@ -217,11 +226,11 @@ void rout_taskcode(void *parameter)
 
             //LED & Buzzer operate
             led_operate(); //LED
-            buz_operate(); //buzzer
+            //buz_operate(); //buzzer
 
             // send websocket info
-            webSocketMeasureInfo();
-            webSocketLoggerInfo();
+            // webSocketMeasureInfo();
+            // webSocketLoggerInfo();
 
 
             // Serial.println(wifi_ssid);
@@ -240,9 +249,10 @@ void rout_taskcode(void *parameter)
         //bt_quit();
 
         //LED & Buzzer routine
-        buz.cbuz_routine();
+        //buz.cbuz_routine();
         blueled.cled_routine();
         yellowled.cled_routine();
+
 
         //Quene Amsg
         if (isalert && !alerted)
@@ -254,20 +264,6 @@ void rout_taskcode(void *parameter)
         if (!isalert && alerted)
         {
             alerted = false;
-        }
-
-        //lora task a
-        if (millis() - previousLoraAMsgMillis >= LoraAMsginterval)
-        {
-            previousLoraAMsgMillis = millis();
-            xTaskCreate(lora_task_acode, "lora_task_a", 5000, NULL, 2, &lora_task_a);
-        }
-
-        //lora task b
-        if (millis() - previousLoraBMsgMillis >= LoraBMsginterval && millis() > 60000)
-        {
-            previousLoraBMsgMillis = millis();
-            xTaskCreate(lora_task_bcode, "lora_task_b", 5000, NULL, 2, &lora_task_b);
         }
 
         //check amsg stauts
@@ -288,11 +284,10 @@ void rout_taskcode(void *parameter)
         {
             bmsging = false;
         }
-
     }
 }
 
-void lora_task_acode(void *parameter)
+void lora_task_acode()
 {
     Serial.println("loratask a");
     if (!isjoin)
@@ -320,10 +315,10 @@ void lora_task_acode(void *parameter)
         //}
     }
 
-    vTaskDelete(NULL);
+    //vTaskDelete(NULL);
 }
 
-void lora_task_bcode(void *parameter)
+void lora_task_bcode()
 {
     Serial.println("loratask b");
     if (!isjoin)
@@ -343,6 +338,6 @@ void lora_task_bcode(void *parameter)
     //}
     //}
 
-    vTaskDelete(NULL);
+    //vTaskDelete(NULL);
 }
 
