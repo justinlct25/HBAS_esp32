@@ -34,9 +34,11 @@ TaskHandle_t task1;
 TaskHandle_t rout_task;
 void rout_taskcode(void *);
 TaskHandle_t lora_task_a;
-void lora_task_acode(void *);
+// void lora_task_acode(void *);
+void lora_task_acode();
 TaskHandle_t lora_task_b;
-void lora_task_bcode(void *);
+// void lora_task_bcode(void *);
+void lora_task_bcode();
 
 
 
@@ -127,6 +129,22 @@ void loop()
     }
     else{
         pinMode(3, INPUT);
+    }
+
+    //lora task a
+    if (millis() - previousLoraAMsgMillis >= LoraAMsginterval)
+    {
+        previousLoraAMsgMillis = millis();
+        // xTaskCreate(lora_task_acode, "lora_task_a", 5000, NULL, 2, &lora_task_a);
+        lora_task_acode();
+    }
+    //lora task b
+    if (millis() - previousLoraBMsgMillis >= LoraBMsginterval && millis() > 60000)
+    {
+        previousLoraBMsgMillis = millis();
+        // xTaskCreate(lora_task_bcode, "lora_task_b", 5000, NULL, 2, &lora_task_b);
+        // xTaskCreate(lora_task_bcode, "lora_task_b", 5000, NULL, 2, &lora_task_b);
+        lora_task_bcode();
     }
 }
 
@@ -254,21 +272,22 @@ void rout_taskcode(void *parameter)
             alerted = false;
         }
 
-        //lora task a
-        if (millis() - previousLoraAMsgMillis >= LoraAMsginterval)
-        {
-            previousLoraAMsgMillis = millis();
-            xTaskCreate(lora_task_acode, "lora_task_a", 5000, NULL, 2, &lora_task_a);
-        }
+        // //lora task a
+        // if (millis() - previousLoraAMsgMillis >= LoraAMsginterval)
+        // {
+        //     previousLoraAMsgMillis = millis();
+        //     // xTaskCreate(lora_task_acode, "lora_task_a", 5000, NULL, 2, &lora_task_a);
+        //     lora_task_acode();
+        // }
 
-        //lora task b
-        if (millis() - previousLoraBMsgMillis >= LoraBMsginterval && millis() > 60000)
-        {
-            previousLoraBMsgMillis = millis();
-            // xTaskCreate(lora_task_bcode, "lora_task_b", 5000, NULL, 2, &lora_task_b);
-            xTaskCreate(lora_task_bcode, "lora_task_b", 5000, NULL, 2, &lora_task_b);
-
-        }
+        // //lora task b
+        // if (millis() - previousLoraBMsgMillis >= LoraBMsginterval && millis() > 60000)
+        // {
+        //     previousLoraBMsgMillis = millis();
+        //     // xTaskCreate(lora_task_bcode, "lora_task_b", 5000, NULL, 2, &lora_task_b);
+        //     // xTaskCreate(lora_task_bcode, "lora_task_b", 5000, NULL, 2, &lora_task_b);
+        //     lora_task_bcode();
+        // }
 
         //check amsg stauts
         if ((amsging && !cmsging) && amsgsuc)
@@ -292,12 +311,15 @@ void rout_taskcode(void *parameter)
     }
 }
 
-void lora_task_acode(void *parameter)
+// void lora_task_acode(void *parameter)
+void lora_task_acode()
 {
     Serial.println("loratask a");
     if (!isjoin)
     {
+        Serial.println("joining lora...");
         njoinlora();
+        Serial.println("joined lora...");
     }
     else
     {
@@ -305,8 +327,10 @@ void lora_task_acode(void *parameter)
         if (recordCounter > 0)
         {
             Serial.printf("Send Amsg %d\r\n", recordCounter - 1);
+            Serial.println("sending a msg");
             nsendloracmsg(arecord[recordCounter - 1]);
             amsging = true;
+            Serial.println("sent a msg");
         }
         // else{ //replace amsg with bmsg if no arecord
         // Serial.println("routine LoRa battery msg sent");
@@ -320,15 +344,18 @@ void lora_task_acode(void *parameter)
         //}
     }
 
-    vTaskDelete(NULL);
+    // vTaskDelete(NULL);
 }
 
-void lora_task_bcode(void *parameter)
+// void lora_task_bcode(void *parameter)
+void lora_task_bcode()
 {
     Serial.println("loratask b");
     if (!isjoin)
     {
+        Serial.println("joining lora...");
         njoinlora();
+        Serial.println("joined lora...");
     }
     else
     {
@@ -336,14 +363,17 @@ void lora_task_bcode(void *parameter)
         Serial.println("routine LoRa battery msg sent");
         strcpy(bmsg, encode_cmsg('B'));
         // nsendloramsg(bmsg);
+        Serial.println("sending b msg");
         nsendloracmsg(bmsg);
         bmsging = true;
+        isjoin = false; // will turn true if +CMSG: Done is received (for checking if isjoin actually keeping)
+        Serial.println("sent b msg");
     }
     //else{
     //Serial.println("LoRa module not free");
     //}
     //}
 
-    vTaskDelete(NULL);
+    // vTaskDelete(NULL);
 }
 

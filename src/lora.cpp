@@ -82,6 +82,7 @@ void lora_rountine(){
         if(strstr(input,"+CMSG: Done") !=NULL || LORABUSY){
             cmsging = false;
             isack = false;
+            isjoin = true;
         }
         
         //Done

@@ -163,7 +163,9 @@ void routine_low_battery_sleep(int sleep_time)
 
 void lora_task_bcode_wake_up(){
   	Serial.println("loratask b");
-	nsendloramsg(encode_cmsg('B'));
+	Serial.println("sending b msg");
+	nsendloracmsg(encode_cmsg('B'));
+	Serial.println("sent b msg");
 	bmsging = true;
 }
 
@@ -173,27 +175,27 @@ void wake_up_task_before_sleep(int time_interval, int attempts){
 
 	int start_time = millis();
 
-	while ((!sLongitude[1] || !sLatitude[1] ) && millis() - start_time <= 60000){
-	  	tinygps();
-		//Serial.println(millis() - start_time);
-	}
+	// while ((!sLongitude[1] || !sLatitude[1] ) && millis() - start_time <= 60000){
+	//   	tinygps();
+	// 	//Serial.println(millis() - start_time);
+	// }
 
 	Serial.println("Get GPS Time : " + String(millis() - start_time));
 	showgpsinfo();
 
 	Serial.print("umsging: ");
-	Serial.println(umsging);
-	if (!umsging){
+	Serial.println(cmsging);
+	if (!cmsging){
 		for (int i = 0; i < attempts; i ++){
 			Serial.printf("-attempt is: %i-\r\n", i);
-			Serial.printf("umsging before function: %i", umsging);
+			Serial.printf("cmsging before function: %i", cmsging);
 			lora_task_bcode_wake_up();
 			start_time = millis();
-			Serial.printf("umsging after function: %i\r\n", umsging);
-			while (umsging && millis() - start_time <= time_interval){
+			Serial.printf("cmsging after function: %i\r\n", cmsging);
+			while (cmsging && millis() - start_time <= time_interval){
 				lora_rountine();
 			}
-			if(!umsging){
+			if(!cmsging){
 				Serial.println("leaving for loop");
 				break;
 			} 
