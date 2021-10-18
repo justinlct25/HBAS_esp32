@@ -17,11 +17,6 @@ char update_server_url[200];
 int lim_distance = 35;
 int lim_angle = 40;
 
-void getNVSConfig(){
-  NVS.begin();
-  lim_distance = NVS.getInt("lim_distance");
-  lim_angle = NVS.getInt("lim_angle");
-}
 
 void getNVSConfig(){
   NVS.begin();

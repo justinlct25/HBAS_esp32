@@ -19,7 +19,7 @@
 #define short_sleep_time  1800UL 
 // #define short_sleep_time  300UL 
 //#define long_sleep_time  3600UL 
-#define long_sleep_time  3600UL                             // for testing
+#define long_sleep_time  30UL                             // for testing
 #define lowvolt 3.9
 // #define lowvolt 3.8001                                       // for testing
 #define highvolt 4.08

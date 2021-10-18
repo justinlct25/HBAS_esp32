@@ -25,7 +25,6 @@
 #include "wifista_update.h"
 #include "wifiap_server.h"
 #include <ArduinoNvs.h>
-#include "wifiserver.h"
 
 
 //core
@@ -58,8 +57,8 @@ unsigned long previousLoraAMsgMillis = 0;
 long LoraAMsginterval = 20000; //30 seconds
 
 unsigned long previousLoraBMsgMillis = 0;
-long LoraBMsginterval = 300000; //5 minutes
-// long LoraBMsginterval = 30000; //
+// long LoraBMsginterval = 300000; //5 minutes
+long LoraBMsginterval = 30000; //
 
 
 void init();
@@ -104,13 +103,11 @@ void setup()
 
 
     // wifiapserver
-    wifiAPServer_init();
+    // wifiAPServer_init();
 
     // get config from NVS
     getNVSConfig();
 
-    // wifiserver
-    wifiServer_run();
 
     //core (legacy function)
     //xTaskCreatePinnedToCore(task1code,"task1",10000,NULL,0,&task1,0);
@@ -218,7 +215,7 @@ void rout_taskcode(void *parameter)
 
             // // Serial.printf("before update");
 
-            wifiAPServer_routine();
+            // wifiAPServer_routine();
 
             //mqtt monitor
             //mqttpub();
@@ -234,8 +231,8 @@ void rout_taskcode(void *parameter)
             buz_operate(); //buzzer
 
             // send websocket info
-            //webSocketMeasureInfo();
-            //webSocketLoggerInfo();
+            webSocketMeasureInfo();
+            webSocketLoggerInfo();
 
 
             // Serial.println(wifi_ssid);

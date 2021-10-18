@@ -380,7 +380,7 @@ void wifiAPServer_routine(){
   if (millis()<=quit_time_wifiap){
   // if (bat >= highvolt){
     Serial.print("wifiapstatusstarted");
-    Serial.print(WiFi.softAPgetStationNum());
+    Serial.print(WiFi.softAPIP());
     // if(wifi_inited==false && WiFi.softAPgetStationNum()==0){
     if(WiFi.softAPgetStationNum()==0){
       Serial.print("wifiinit");

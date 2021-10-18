@@ -32,6 +32,9 @@ extern bool bmsging;
 extern bool amsgsuc;
 //extern bool bmsgsuc;
 
+extern int rssi;
+extern int snr;
+
 void manuallora();
 void lora_rountine();
 void njoinlora();

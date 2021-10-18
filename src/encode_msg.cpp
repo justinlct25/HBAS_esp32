@@ -38,7 +38,7 @@ char *encode_cmsg(char msgtype){
   
   // }
   sprintf(h_bat,"%x",bat2);
-  sprintf(testmsg,"%s;%s;%s;%s;%c",h_timestamp,h_latitude,h_longitude,h_bat,h_msgtype);
+  sprintf(testmsg,"%s;%s;%s;%s;%c;%s;%s",h_timestamp,h_latitude,h_longitude,h_bat,h_msgtype, String(rssi), String(snr));
   
   return testmsg;
 }
