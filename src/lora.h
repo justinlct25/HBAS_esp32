@@ -32,11 +32,15 @@ extern bool bmsging;
 extern bool amsgsuc;
 //extern bool bmsgsuc;
 
+extern int rssi;
+extern int snr;
+
 void manuallora();
 void lora_rountine();
 void njoinlora();
 void nsendloramsg(char*);
 void nsendloracmsg(char*);
+void lora_getpayload();
 void showlora();
 void lora_msginghandle();
 

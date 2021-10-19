@@ -1,6 +1,6 @@
 #include "encode_msg.h"
 
-char testmsg[70];
+char testmsg[60];
 
 char *encode_cmsg(char msgtype){
   char h_timestamp[10];
@@ -8,9 +8,7 @@ char *encode_cmsg(char msgtype){
   char h_longitude[10];
   char h_bat[4];
   char h_msgtype=msgtype;
-  char h_rssi[5];
-  char h_snr[5];
-  memset(testmsg,'\0',70);
+  memset(testmsg,'\0',60);
   sprintf(h_timestamp,"%x",(unsigned int)utctime());
   // if(issleep){
   //   // Serial.print("NVSgggg");
@@ -38,11 +36,14 @@ char *encode_cmsg(char msgtype){
   // if(sLatitude=="0"||sLongitude=="0"){
   // Serial.print("inside 0");
   
-  // }
 
   sprintf(h_bat,"%x",bat2);
-  sprintf(testmsg,"%s;%s;%s;%s;%c;%s;%s",h_timestamp,h_latitude,h_longitude,h_bat,h_msgtype,h_rssi,h_snr);
+  // sprintf(testmsg,"%s;%s;%s;%s;%c;%s;%s",h_timestamp,h_latitude,h_longitude,h_bat,h_msgtype,h_rssi,h_snr);
+  sprintf(testmsg,"%s;%s;%s;%s;%c;%i;%i",h_timestamp,h_latitude,h_longitude,h_bat,h_msgtype,rssi,snr);
   
+  Serial.print("MSG Length : ");
+  Serial.println(strlen(testmsg));
+
   return testmsg;
 }
 

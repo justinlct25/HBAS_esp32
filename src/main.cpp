@@ -16,7 +16,7 @@
 #include "mqtt.h"
 //#include "radar.h"
 #include "led.h"
-//#include <esp_task_wdt.h>
+#include <esp_task_wdt.h>
 //#include <ESPmDNS.h>
 #include "bluetooth.h"
 #include "deepsleep.h"
@@ -56,16 +56,15 @@ long LoraAMsginterval = 20000; //30 seconds
 
 unsigned long previousLoraBMsgMillis = 0;
 //long LoraBMsginterval = 300000; //5 minutes
-long LoraBMsginterval = 10000; //
+long LoraBMsginterval = 60000; //
 
 
 void init();
 
 void setup()
 {
-    //watchdog
-    // esp_task_wdt_init(60, true); //enable panic so ESP32 restarts
-    // esp_task_wdt_add(NULL); //add current thread to WDT watch
+    // esp_task_wdt_init(20, true); //enable panic so ESP32 restarts
+    // esp_task_wdt_add(NULL); //add current thread to WDT watc
     init();
     bat_init();
 
@@ -96,10 +95,6 @@ void setup()
     //bt_init();
     //njoinlora();
 
-
-    // wifiapserver
-    //wifiAPServer_init();
-
     //core (legacy function)
     //xTaskCreatePinnedToCore(task1code,"task1",10000,NULL,0,&task1,0);
     // Serial.println("issleep2:");
@@ -117,6 +112,11 @@ void setup()
 
 void loop()
 {
+    //watchdog
+    // esp_task_wdt_init(30, true); //enable panic so ESP32 restarts
+    // esp_task_wdt_add(NULL); //add current thread to WDT watch
+    // esp_task_wdt_reset();
+
     //Handle lora transmission status
     lora_rountine();
 
@@ -292,7 +292,9 @@ void lora_task_acode()
     Serial.println("loratask a");
     if (!isjoin)
     {
+        Serial.println("joining lora...");
         njoinlora();
+        Serial.println("joined lora...");
     }
     else
     {
@@ -300,8 +302,10 @@ void lora_task_acode()
         if (recordCounter > 0)
         {
             Serial.printf("Send Amsg %d\r\n", recordCounter - 1);
+            Serial.println("sending a msg");
             nsendloracmsg(arecord[recordCounter - 1]);
             amsging = true;
+            Serial.println("sent a msg");
         }
         // else{ //replace amsg with bmsg if no arecord
         // Serial.println("routine LoRa battery msg sent");
@@ -323,15 +327,21 @@ void lora_task_bcode()
     Serial.println("loratask b");
     if (!isjoin)
     {
+        Serial.println("joining lora...");
         njoinlora();
+        Serial.println("joined lora...");
     }
     else
     {
         //if(!joining && !cmsging && !umsging){
         Serial.println("routine LoRa battery msg sent");
         strcpy(bmsg, encode_cmsg('B'));
-        nsendloramsg(bmsg);
+        // nsendloramsg(bmsg);
+        Serial.println("sending b msg");
+        nsendloracmsg(bmsg);
         bmsging = true;
+        isjoin = false; // will turn true if +CMSG: Done is received (for checking if isjoin actually keeping)
+        Serial.println("sent b msg");
     }
     //else{
     //Serial.println("LoRa module not free");

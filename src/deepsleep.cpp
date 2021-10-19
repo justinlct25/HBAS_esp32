@@ -3,7 +3,7 @@
 RTC_DATA_ATTR int bootCount = 0;
 RTC_DATA_ATTR bool issleep = false;
 // RTC_DATA_ATTR bool issleep = true;						// test only
-RTC_DATA_ATTR bool ischarge = false;
+//RTC_DATA_ATTR bool ischarge = false;
 
 
 TaskHandle_t lora_task_b_wake_up;
@@ -125,20 +125,18 @@ void deepsleep_routine()
 {
 	//Serial.printf("battery reading: %f\r\n", bat);
 
-	if (digitalRead(16)){
-		//Serial.print("charging");
-		charge_stopped = millis();
+	if (!digitalRead(16)){
+		if (bat < lowvolt)
+		{
+			Serial.println("Routine low battery deep sleep trigger");
+			routine_low_battery_sleep(long_sleep_time);
+		}
+		else if (bat >= lowvolt && bat < highvolt && millis() - charge_stopped >= charge_interval )
+		{
+			Serial.println("I should buzz then sleep");
+			routine_low_battery_sleep(long_sleep_time);
+		}       
 	}
-	if (bat < lowvolt)
-	{
-		Serial.println("Routine low battery deep sleep trigger");
-		routine_low_battery_sleep(long_sleep_time);
-	}
-	else if (bat >= lowvolt && bat < highvolt && !digitalRead(16) && millis() - charge_stopped >= charge_interval )
-	{
-		Serial.println("I should buzz then sleep");
-		routine_low_battery_sleep(long_sleep_time);
-	}       
 }
 
 void routine_low_battery_sleep(int sleep_time)
@@ -149,7 +147,7 @@ void routine_low_battery_sleep(int sleep_time)
 	esp_sleep_enable_ext0_wakeup(GPIO_NUM_12, HIGH);
 	esp_sleep_enable_timer_wakeup(sleep_time * uS);
 	//buzzer(3);
-	Serial.flush();
+	//Serial.flush();
 	Serial.println("Enter Deep Sleep Mode");
 	Serial.println("End Time : " + String(millis()));
 	digitalWrite(17, LOW);
@@ -163,7 +161,9 @@ void routine_low_battery_sleep(int sleep_time)
 
 void lora_task_bcode_wake_up(){
   	Serial.println("loratask b");
-	nsendloramsg(encode_cmsg('B'));
+	Serial.println("sending b msg");
+	nsendloracmsg(encode_cmsg('B'));
+	Serial.println("sent b msg");
 	bmsging = true;
 }
 
@@ -186,10 +186,10 @@ void wake_up_task_before_sleep(int time_interval, int attempts){
 	if (!cmsging){
 		for (int i = 0; i < attempts; i ++){
 			Serial.printf("-attempt is: %i-\r\n", i);
-			Serial.printf("umsging before function: %i", cmsging);
+			Serial.printf("cmsging before function: %i", cmsging);
 			lora_task_bcode_wake_up();
 			start_time = millis();
-			Serial.printf("umsging after function: %i\r\n", cmsging);
+			Serial.printf("cmsging after function: %i\r\n", cmsging);
 			while (cmsging && millis() - start_time <= time_interval){
 				lora_rountine();
 			}

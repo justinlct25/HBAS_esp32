@@ -15,7 +15,8 @@ char update_server_url[200];
 
 // limit parameter (東風)
 int lim_distance = 35;
-int lim_angle = 40; //ref: ~ 47  ref: ~105
+int lim_angle = 40;
+
 
 void getNVSConfig(){
   NVS.begin();

@@ -23,9 +23,8 @@ bool amsgsuc = false;
 bool bmsging = false;
 //bool bmsgsuc = false;
 
-
-int rssi = 0;
-int snr = 0;
+RTC_DATA_ATTR int rssi = 0;
+RTC_DATA_ATTR int snr = 0;
 
 //new development
 void manuallora(){
@@ -83,6 +82,7 @@ void lora_rountine(){
         if(strstr(input,"+CMSG: Done") !=NULL || LORABUSY){
             cmsging = false;
             isack = false;
+            isjoin = true;
         }
         
         //Done
@@ -112,6 +112,16 @@ void lora_rountine(){
             Serial.println(String(rssi));
             Serial.println(String(snr));
         }
+
+        //Reflash
+        if(strstr(input, "+CMSG: Length error") != NULL || strstr(input, "Length error") != NULL)
+        {
+            lora.print("AT+CMSG\r\n");
+            delay(5);
+            lora.print("AT+MSG\r\n");
+            Serial.println("reflash lora");
+        }
+
         memset(input,'\0',sizeof(input));
         inn=0;
         ln=NULL;
@@ -125,11 +135,12 @@ void njoinlora(){
     //lora.print("AT+JOIN\r\n");
     lora.print("AT+JOIN\r\n");
     //lora.flush();
-    isjoin = false;
+    isjoin = true;
     joining = true;
 }
 
 void nsendloramsg(char *msg){
+    lora_getpayload();//test use
     lora.printf("AT+CMSG=\"%s\"\r\n",msg);
     //lora.flush();
     //umsging = true;
@@ -138,11 +149,21 @@ void nsendloramsg(char *msg){
 }
 
 void nsendloracmsg(char *msg){
+    lora_getpayload();//test use
     lora.printf("AT+CMSG=\"%s\"\r\n",msg);
     //lora.flush();
     isack = false;
     cmsging = true;
 }
+
+void lora_getpayload()
+{
+    lora.printf("AT+LW=LEN\r\n");
+    delay(5);
+}
+// void checklorarssi(){
+//     lora.printf("AT+TEST=RSSI");
+// }
 
 void showlora(){
   Serial.println("--------------lora bool-------------------");
