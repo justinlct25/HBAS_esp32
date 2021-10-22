@@ -1,6 +1,6 @@
 #include "lora.h"
 
-//Lora
+//Lora 可能需要換成hardware
 SoftwareSerial lora(14,13); //TX,RX
 
 //lorawan send and receive
@@ -14,30 +14,37 @@ int inn = 0;
 char *ln = NULL;
 char *par=NULL;
 bool isack = false;
+bool isackb = false;
 
 bool joining = false;
 bool umsging = false;
 bool cmsging = false;
+bool cmsgingb = false;
 bool amsging = false;
 bool amsgsuc = false;
 bool bmsging = false;
-//bool bmsgsuc = false;
+bool bmsgsuc = false;
 
 RTC_DATA_ATTR int rssi = 0;
 RTC_DATA_ATTR int snr = 0;
 
+String cmd = "";
+
+//gov app key
+String appkey="3eccf78a2d99432e93da41c8a7768928";
+
 //new development
-void manuallora(){
-    if(Serial.available()>0){
-        char a=(char)Serial.read();
-        lora.print(a);
-        Serial.print(a); //local echo
-    }
-    if(lora.available()>0){
-        char b=(char)Serial.read();
-        Serial.print(b);
-    }
-}
+// void manuallora(){
+//     if(Serial.available()>0){
+//         char a=(char)Serial.read();
+//         lora.print(a);
+//         Serial.print(a); //local echo
+//     }
+//     if(lora.available()>0){
+//         char b=(char)Serial.read();
+//         Serial.print(b);
+//     }
+// }
 
 void lora_rountine(){
     /*if(Serial.available()>0){
@@ -59,46 +66,80 @@ void lora_rountine(){
         Serial.println(input);
 
         //join 
-        if(strstr(input,"+JOIN: Network joined") !=NULL || strstr(input,"+JOIN: Joined already") !=NULL || strstr(input,"joined") !=NULL || strstr(input,"Joined") !=NULL || strstr(input,"already") !=NULL || strstr(input,"+JOIN: Network joine") !=NULL || strstr(input,"NetID") !=NULL  || strstr(input,"DevAddr") !=NULL ){
+        if( strstr(input,"+JOIN: Network joined") !=NULL || 
+            strstr(input,"+JOIN: joined already") !=NULL || 
+            strstr(input,"joined") !=NULL || 
+            strstr(input,"Joined") !=NULL || 
+            strstr(input,"already") !=NULL || 
+            strstr(input,"+JOIN: Network joine") !=NULL || 
+            strstr(input,"+JOIN: NetID") !=NULL  || 
+            strstr(input,"NetID") !=NULL  || 
+            strstr(input,"DevAddr") !=NULL ){
             isjoin = true;
-        } else if(strstr(input,"+JOIN: Join failed") !=NULL || strstr(input,"failed")){
+        } else if(  strstr(input,"+JOIN: Join failed") !=NULL || 
+                    strstr(input,"+JOIN: Join") !=NULL || 
+                    strstr(input,"Join failed") !=NULL || 
+                    strstr(input,"failed") !=NULL ){
             isjoin = false;
         }
-        if(strstr(input,"+JOIN: Done") !=NULL || strstr(input,"+JOIN: Joined already") !=NULL || strstr(input,"Joined") !=NULL || strstr(input,"already") !=NULL || LORABUSY){
+        if( strstr(input,"+JOIN: Done") !=NULL || 
+            strstr(input,"+JOIN: Joined already") !=NULL || 
+            strstr(input,"Joined") !=NULL || 
+            strstr(input,"already") !=NULL || LORABUSY){
             joining = false;
         }
 
-        //umsg
-        if(strstr(input,"+MSG: Done") !=NULL || LORABUSY){
-            umsging = false;
-            delay(1000);
-        }
+        // //umsg
+        // if(strstr(input,"+MSG: Done") !=NULL || LORABUSY){
+        //     umsging = false;
+        //     delay(1000);
+        // }
 
         //cmsg
-        if(strstr(input,"+CMSG: ACK Received")!=NULL || strstr(input,"ACK Received")!=NULL || strstr(input,"Received")!=NULL){
+        if( strstr(input,"+CMSG: Start") !=NULL ||
+            strstr(input,"+CMSG: Wait ACK") !=NULL ||
+            strstr(input,"Wait ACK") !=NULL ||
+            strstr(input,"+CMSG: Wait") !=NULL){
+            recordCounterB++;
+            recordCounterS++;
+        }
+        if( strstr(input,"+CMSG: ACK Received")!=NULL || 
+            strstr(input,"+CMSG: ACK")!=NULL || 
+            //strstr(input,"+CMSG: FPENDING")!=NULL || 
+            //strstr(input,"FPENDING")!=NULL || 
+            strstr(input,"ACK Received")!=NULL || 
+            strstr(input,"Received")!=NULL){
             isack = true;
+            isackb = true;
+            recordCounterB = 0;
         }
         lora_msginghandle();
         if(strstr(input,"+CMSG: Done") !=NULL || LORABUSY){
             cmsging = false;
+            cmsgingb = false;
             isack = false;
+            isackb = false;
             isjoin = true;
         }
         
         //Done
         if(strstr(input,"Done") !=NULL){
             joining = false;
-            umsging = false;
+            //umsging = false;
             cmsging = false;
+            cmsgingb = false;
         }
 
         //RSSI & SNR 
-        if(strstr(input, "RSSI") !=NULL){
+        if( strstr(input, "RSSI") !=NULL ||
+            //strstr(input, "RXWIN") !=NULL ||
+            //strstr(input, "+CMSG: RXWIN") !=NULL ||
+            strstr(input, "SNR") !=NULL){
             char *RSSInSNR = strstr(input, "RSSI");
             char *token = strtok(RSSInSNR, ", ");
             int count = 0;
-            char *RSSIstr = "";
-            char *SNRstr = "";
+            char const *RSSIstr = "";
+            char const *SNRstr = "";
             while(token != NULL){
                 if(count==1){
                     rssi = atoi(token);
@@ -108,9 +149,10 @@ void lora_rountine(){
                 count++;
                 token = strtok(NULL, ", ");
             }
-            Serial.println("rssi&snr: ");
-            Serial.println(String(rssi));
-            Serial.println(String(snr));
+            recordCounterS = 0;
+            // Serial.println("rssi&snr: ");
+            // Serial.println(String(rssi));
+            // Serial.println(String(snr));
         }
 
         //Reflash
@@ -119,7 +161,8 @@ void lora_rountine(){
             lora.print("AT+CMSG\r\n");
             delay(5);
             lora.print("AT+MSG\r\n");
-            Serial.println("reflash lora");
+            //delay(5);
+            //Serial.println("reflash lora");
         }
 
         memset(input,'\0',sizeof(input));
@@ -134,23 +177,26 @@ void lora_rountine(){
 void njoinlora(){
     //lora.print("AT+JOIN\r\n");
     lora.print("AT+JOIN\r\n");
+    //delay(5);
     //lora.flush();
-    isjoin = true;
+    //isjoin = false;
     joining = true;
 }
 
 void nsendloramsg(char *msg){
-    lora_getpayload();//test use
+    //lora_getpayload();
     lora.printf("AT+CMSG=\"%s\"\r\n",msg);
+    //delay(5);
     //lora.flush();
     //umsging = true;
-    isack = false;
-    cmsging = true;
+    isackb = false;
+    cmsgingb = true;
 }
 
 void nsendloracmsg(char *msg){
-    lora_getpayload();//test use
+    //lora_getpayload();
     lora.printf("AT+CMSG=\"%s\"\r\n",msg);
+    //delay(5);
     //lora.flush();
     isack = false;
     cmsging = true;
@@ -159,7 +205,7 @@ void nsendloracmsg(char *msg){
 void lora_getpayload()
 {
     lora.printf("AT+LW=LEN\r\n");
-    delay(5);
+    //delay(5);
 }
 // void checklorarssi(){
 //     lora.printf("AT+TEST=RSSI");
@@ -171,7 +217,6 @@ void showlora(){
   Serial.printf("%-10s: %d %-10s: %d %-10s: %d\r\n","joining",joining,"cmsging",cmsging,"umsging",umsging);
   Serial.printf("%-10s: %d %-10s: %d\r\n","amsging",amsging,"amsgsuc",amsgsuc);
   Serial.println("------------------------------------------");
-
 }
 
 void lora_msginghandle(){
@@ -181,7 +226,85 @@ void lora_msginghandle(){
     }else{
         amsgsuc = false;
     }
+    //handle Bmsg
+    if( (bmsging && cmsgingb) && isackb ){
+        // Serial.print("Run B CMSG Suc Count : ");
+        // Serial.println(recordCounterB);
+        bmsgsuc = true;
+        recordCounterB = 0;
+    }else{
+        bmsgsuc = false;
+    }
+}
 
+void printfb(int line){
+  for(int i=0;i<line;i++){
+    String data = lora.readStringUntil('\n');
+    Serial.println(data);
+  }
+}
+
+void lora_AT_init()
+{
+  Serial.println("Lora AT Initializing...");
+  //wifi_init();
+  //led_init();
+  //init_task();
+
+  lora.print("AT+ID\r\n");
+  printfb(3);
+
+  cmd="AT+MODE=LWOTAA\r\n";
+  lora.print(cmd);
+  printfb(1);
+  
+  cmd="AT+KEY=APPKEY,\""+appkey+"\"\r\n";
+  lora.print(cmd);
+  printfb(1);
+  
+  cmd="AT+DR=AS923\r\n";
+  lora.print(cmd);
+  printfb(1);
+
+  cmd="AT+CH=0,923.2,DR0,DR5\r\n";
+  lora.print(cmd);
+  printfb(1);
+
+  cmd="AT+CH=1,923.4,DR0,DR5\r\n";
+  lora.print(cmd);
+  printfb(1);
+
+  cmd="AT+CH=2,923.6,DR0,DR5\r\n";
+  lora.print(cmd);
+  printfb(1);
+
+  cmd="AT+CH=3,923.8,DR0,DR5\r\n";
+  lora.print(cmd);
+  printfb(1);
+  
+  cmd="AT+CH=4,924.0,DR0,DR5\r\n";
+  lora.print(cmd);
+  printfb(1);
+  
+  cmd="AT+CH=5,924.2,DR0,DR5\r\n";
+  lora.print(cmd);
+  printfb(1);
+  
+  cmd="AT+CH=6,924.4,DR0,DR5\r\n";
+  lora.print(cmd);
+  printfb(1);
+  
+  cmd="AT+CH=7,924.6,DR0,DR5\r\n";
+  lora.print(cmd);
+  printfb(1);
+
+  cmd="AT+ADR=ON\r\n";
+  lora.print(cmd);
+  printfb(1);
+
+  cmd="AT+DR=DR2\r\n";
+  lora.print(cmd);
+  printfb(1);
 }
 
 //legacy development

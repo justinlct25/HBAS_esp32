@@ -8,6 +8,9 @@ char *encode_cmsg(char msgtype){
   char h_longitude[10];
   char h_bat[4];
   char h_msgtype=msgtype;
+  // char h_rssi[4];
+  // char h_snr[3];
+  // char h_bootCount[4];
   memset(testmsg,'\0',60);
   sprintf(h_timestamp,"%x",(unsigned int)utctime());
   // if(issleep){
@@ -38,9 +41,17 @@ char *encode_cmsg(char msgtype){
   
 
   sprintf(h_bat,"%x",bat2);
-  // sprintf(testmsg,"%s;%s;%s;%s;%c;%s;%s",h_timestamp,h_latitude,h_longitude,h_bat,h_msgtype,h_rssi,h_snr);
-  sprintf(testmsg,"%s;%s;%s;%s;%c;%i;%i",h_timestamp,h_latitude,h_longitude,h_bat,h_msgtype,rssi,snr);
+
+  // sprintf(h_rssi,"%x",rssi);
+  // sprintf(h_snr,"%x",snr);
+  // sprintf(h_bootCount,"%x",bootCount);
+
+  // sprintf(testmsg,"%s;%s;%s;%s;%c;%s;%s;%s",h_timestamp,h_latitude,h_longitude,h_bat,h_msgtype,h_rssi,h_snr,h_bootCount);
+  sprintf(testmsg,"%s;%s;%s;%s;%c;%i;%i;%i",h_timestamp,h_latitude,h_longitude,h_bat,h_msgtype,rssi,snr,bootCount);
   
+  Serial.print("MSG : ");
+  Serial.println(testmsg);
+
   Serial.print("MSG Length : ");
   Serial.println(strlen(testmsg));
 

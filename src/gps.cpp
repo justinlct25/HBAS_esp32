@@ -140,8 +140,8 @@ void showgpsinfo()
     Serial.println(datetime);
 
     //new 輸出衛星數量
-    Serial.print("Satellites : ");
-    tgps.satellites.isValid() ? Serial.println(tgps.satellites.value()) : Serial.println("0");
+    // Serial.print("Satellites : ");
+    // tgps.satellites.isValid() ? Serial.println(tgps.satellites.value()) : Serial.println("0");
 }
 
 time_t utctime(){

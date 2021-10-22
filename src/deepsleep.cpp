@@ -44,12 +44,14 @@ void deepsleep_handler()
 	getbattery();
 	Serial.printf("Boot number: %d\r\n", ++bootCount);
 	Serial.printf("Current battery: %f\r\n", bat);
-	//Serial.printf("issleep: %i\r\n", issleep);
+	Serial.printf("issleep: %i\r\n", issleep);
+    // Serial.print("POWER EXT : ");
+    // Serial.println(digitalRead(16));
 	if (issleep)
 	{
-		if (((bat >= lowvolt) && (digitalRead(16))) || bat >= highvolt)
+		if (!digitalRead(16))
 		{
-			Serial.print("Is charging or get enough battery\r\nLeave deep sleep mode\r\n");
+			Serial.print("Leave deep sleep mode\r\n");
 			issleep = false;
 			// Serial.println("self-reboot");
 			// ESP.restart(); //may not require
@@ -73,6 +75,7 @@ void deepsleep_handler()
 						lora_rountine();
 					}
 					if (isjoin) break;
+					if (i == 4) isjoin = true;
 				}
 			}
 			//Serial.printf("isjoin: %i\r\n", isjoin);
@@ -113,8 +116,9 @@ void deepsleep_handler()
 				routine_low_battery_sleep(long_sleep_time);
 			} else {
 				Serial.println("Startup low battery deep sleep triggered with UNSUCCESS lora join");
-				delay(2000);
-				routine_low_battery_sleep(short_sleep_time);
+				wake_up_task_before_sleep(time_interval, attempts - 3);
+				delay(300);
+				routine_low_battery_sleep(long_sleep_time);
 			}
 		// 	//++bootCount;
 		}
@@ -124,18 +128,26 @@ void deepsleep_handler()
 void deepsleep_routine()
 {
 	//Serial.printf("battery reading: %f\r\n", bat);
-
-	if (!digitalRead(16)){
-		if (bat < lowvolt)
-		{
-			Serial.println("Routine low battery deep sleep trigger");
-			routine_low_battery_sleep(long_sleep_time);
-		}
-		else if (bat >= lowvolt && bat < highvolt && millis() - charge_stopped >= charge_interval )
+	if (!digitalRead(16))
+	{
+		charge_stopped = millis();
+	}
+	if (digitalRead(16)){
+		// if (bat < lowvolt)
+		// {
+		// 	Serial.println("Routine low battery deep sleep trigger");
+		// 	routine_low_battery_sleep(long_sleep_time);
+		// }
+		// else if (bat >= lowvolt && bat < highvolt && millis() - charge_stopped >= charge_interval )
+		// {
+		// 	Serial.println("I should buzz then sleep");
+		// 	routine_low_battery_sleep(long_sleep_time);
+		// }    
+		if (bat < highvolt && millis() - charge_stopped >= charge_interval )
 		{
 			Serial.println("I should buzz then sleep");
-			routine_low_battery_sleep(long_sleep_time);
-		}       
+			routine_low_battery_sleep(long_sleep_time);   
+		}
 	}
 }
 
@@ -144,7 +156,7 @@ void routine_low_battery_sleep(int sleep_time)
 	gps_standby();
 	Serial.printf("Setup ESP32 to sleep for every %i Seconds\r\n", sleep_time);
 	issleep = true;
-	esp_sleep_enable_ext0_wakeup(GPIO_NUM_12, HIGH);
+	esp_sleep_enable_ext0_wakeup(GPIO_NUM_36, HIGH);
 	esp_sleep_enable_timer_wakeup(sleep_time * uS);
 	//buzzer(3);
 	//Serial.flush();
@@ -155,15 +167,13 @@ void routine_low_battery_sleep(int sleep_time)
 	
 }
 
-
-
-
-
 void lora_task_bcode_wake_up(){
   	Serial.println("loratask b");
-	Serial.println("sending b msg");
-	nsendloracmsg(encode_cmsg('B'));
-	Serial.println("sent b msg");
+	//Serial.println("sending b msg");
+	nsendloramsg(encode_cmsg('S'));
+	//Serial.println("sent b msg");
+	recordCounterB++;
+	recordCounterS++;
 	bmsging = true;
 }
 
@@ -173,7 +183,7 @@ void wake_up_task_before_sleep(int time_interval, int attempts){
 
 	int start_time = millis();
 
-	while ((!sLongitude[1] || !sLatitude[1] ) && millis() - start_time <= 60000){
+	while ((!sLongitude[1] || !sLatitude[1] ) && millis() - start_time <= GPS_GET_TIME){
 	  	tinygps();
 		//Serial.println(millis() - start_time);
 	}
@@ -181,20 +191,18 @@ void wake_up_task_before_sleep(int time_interval, int attempts){
 	Serial.println("Get GPS Time : " + String(millis() - start_time));
 	showgpsinfo();
 
-	Serial.print("umsging: ");
-	Serial.println(cmsging);
-	if (!cmsging){
+	if (!cmsgingb){
 		for (int i = 0; i < attempts; i ++){
-			Serial.printf("-attempt is: %i-\r\n", i);
-			Serial.printf("cmsging before function: %i", cmsging);
-			lora_task_bcode_wake_up();
+			Serial.printf("attempt is : %i\r\n", i + 1);
 			start_time = millis();
-			Serial.printf("cmsging after function: %i\r\n", cmsging);
-			while (cmsging && millis() - start_time <= time_interval){
+			//Serial.printf("cmsging before function: %i", cmsging);
+			lora_task_bcode_wake_up();
+			//Serial.printf("cmsging after function: %i\r\n", cmsging);
+			while ((recordCounterB > 0 || recordCounterS > 0) && millis() - start_time <= time_interval){
 				lora_rountine();
 			}
-			if(!cmsging){
-				Serial.println("leaving for loop");
+			if(recordCounterB == 0 && recordCounterS == 0){
+				Serial.println("Sleep S CMSG Suc.");
 				break;
 			} 
 		}
