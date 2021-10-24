@@ -16,17 +16,25 @@ char *encode_cmsg(char msgtype){
   // if(issleep){
   //   // Serial.print("NVSgggg");
     
-  //   sprintf(h_latitude,"%x",(int)(((NVS.getString("latitude").toFloat())+90)*1000000));
-  //   sprintf(h_longitude,"%x",(int)((((NVS.getString("longitude")).toFloat())+180)*1000000));
   //   Serial.println("coordinates got before msgb");
     // Serial.println(String(h_latitude));
     // Serial.println(String(h_longitude));
     // Serial.println(NVS.getString("latitude").toFloat());
-    // Serial.println(NVS.getString("longitude").toFloat());
+    // Serial.println(NVS.getString("longitude").toF0  loat());
 
   // }else{
-    sprintf(h_latitude,"%x",(int)(((sLatitude.toFloat())+90)*1000000));
-    sprintf(h_longitude,"%x",(int)(((sLongitude.toFloat())+180)*1000000));
+    // if(!sLatitude.equals("0"))
+    // {
+      sprintf(h_latitude,"%x",(int)(((sLatitude.toFloat())+90)*1000000));
+      sprintf(h_longitude,"%x",(int)(((sLongitude.toFloat())+180)*1000000));
+    // }
+    // else
+    // {
+      // sprintf(h_latitude,"%x",(int)(((NVS.getString("latitude").toFloat())+90)*1000000));
+      // sprintf(h_longitude,"%x",(int)((((NVS.getString("longitude")).toFloat())+180)*1000000));
+    //   h_msgtype = 'G';
+    // }
+
   // }
   // Serial.println("outside 0");
   // Serial.println(str(h_latitude));

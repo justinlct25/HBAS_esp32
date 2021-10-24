@@ -133,19 +133,10 @@ void deepsleep_routine()
 		charge_stopped = millis();
 	}
 	if (digitalRead(16)){
-		// if (bat < lowvolt)
-		// {
-		// 	Serial.println("Routine low battery deep sleep trigger");
-		// 	routine_low_battery_sleep(long_sleep_time);
-		// }
-		// else if (bat >= lowvolt && bat < highvolt && millis() - charge_stopped >= charge_interval )
-		// {
-		// 	Serial.println("I should buzz then sleep");
-		// 	routine_low_battery_sleep(long_sleep_time);
-		// }    
 		if (bat < highvolt && millis() - charge_stopped >= charge_interval )
 		{
 			Serial.println("I should buzz then sleep");
+			//wake_up_task_before_sleep(20000, 2);
 			routine_low_battery_sleep(long_sleep_time);   
 		}
 	}
@@ -162,7 +153,13 @@ void routine_low_battery_sleep(int sleep_time)
 	//Serial.flush();
 	Serial.println("Enter Deep Sleep Mode");
 	Serial.println("End Time : " + String(millis()));
-	digitalWrite(17, LOW);
+	digitalWrite(GPIO_NUM_2, LOW);//後面需要切換MPU6050 sleep模式
+	digitalWrite(GPIO_NUM_17, LOW);
+
+	esp_wifi_stop();
+	//esp_bluedroid_disable();
+	//esp_bt_controller_disable();
+
 	esp_deep_sleep_start();
 	
 }

@@ -177,7 +177,7 @@ void lora_rountine(){
 void njoinlora(){
     //lora.print("AT+JOIN\r\n");
     lora.print("AT+JOIN\r\n");
-    //delay(5);
+    delay(5);
     //lora.flush();
     //isjoin = false;
     joining = true;
@@ -186,7 +186,7 @@ void njoinlora(){
 void nsendloramsg(char *msg){
     //lora_getpayload();
     lora.printf("AT+CMSG=\"%s\"\r\n",msg);
-    //delay(5);
+    delay(5);
     //lora.flush();
     //umsging = true;
     isackb = false;
@@ -196,7 +196,7 @@ void nsendloramsg(char *msg){
 void nsendloracmsg(char *msg){
     //lora_getpayload();
     lora.printf("AT+CMSG=\"%s\"\r\n",msg);
-    //delay(5);
+    delay(5);
     //lora.flush();
     isack = false;
     cmsging = true;

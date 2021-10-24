@@ -9,13 +9,14 @@
 #include "wifi_c.h"
 #include <sys/time.h>
 #include <string>
+#include "esp_wifi.h"
 
 #define uS 1000000UL
 //#define short_sleep_time  1800UL 
 #define short_sleep_time  1800UL 
 // #define short_sleep_time  300UL 
 //#define long_sleep_time  3600UL 
-#define long_sleep_time  600UL                             // for testing
+#define long_sleep_time  3600UL                             // for testing
 // #define lowvolt 3.5
 // #define highvolt 3.58
 #define lowvolt 3.9
@@ -31,7 +32,7 @@
 
 extern RTC_DATA_ATTR int bootCount;
 extern RTC_DATA_ATTR bool issleep;
-extern RTC_DATA_ATTR bool ischarge;
+// extern RTC_DATA_ATTR bool ischarge;
 
 void print_wakeup_reason();
 void deepsleep_handler();

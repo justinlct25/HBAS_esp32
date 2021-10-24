@@ -1,7 +1,6 @@
 #include "bat.h"
 
 ESP32AnalogRead adc;
-ESP32AnalogRead adc2;
 
 float bat = 0;
 int bat2 = 0;

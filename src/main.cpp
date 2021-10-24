@@ -50,6 +50,7 @@ char bmsg[maxbuffer];
 
 //Important Timer
 unsigned long previousMillis = 0;
+unsigned long previousMillis1 = 0;
 const long interval = 1000; //1 second
 
 unsigned long previousLoraAMsgMillis = 0;
@@ -61,7 +62,7 @@ long LoraBMsginterval = 300000; //5 minutes
 // long LoraBMsginterval = 60000; //
 
 unsigned long previousLoraMsgMillis = 0;
-long LoraMsginterval = 30000; //
+long LoraMsginterval = 45000; //
 
 void init();
 
@@ -85,7 +86,7 @@ void setup()
     //new
     //if(!issleep) gps_init();
     //gps_init();
-    if(bootCount == 0 && bat > highvolt) 
+    if(bootCount == 0 && bat > highvolt && issleep == false && !digitalRead(16)) 
     {
         gps_coolstart();//20-40s +
     }
@@ -191,7 +192,14 @@ void loop()
         {
             bmsging = false;
         }
-        
+
+        //current WDT status
+        // if (millis() - previousMillis1 >= interval)
+        // {
+        //     previousMillis1 = millis();
+        //     Serial.print("loop WDT STATUS : ");
+        //     Serial.println(esp_task_wdt_status(NULL));
+        // }
 }
 
 void init()
@@ -200,6 +208,8 @@ void init()
     pinMode(17, OUTPUT);    //All module power supply
     digitalWrite(17, HIGH); //pull up
     pinMode(16, INPUT_PULLUP);     //battery charging signal
+
+    //pinMode(39, ANALOG); //bat STDBY
 
     //open MPU6050/Radar Power
     pinMode(GPIO_NUM_2, OUTPUT);
@@ -255,8 +265,13 @@ void rout_taskcode(void *parameter)
             //showstatus();
             showgyro();
             showtof();
-            // Serial.print("BAT CHANGE : ");
-            // Serial.println(digitalRead(16));
+            Serial.print("BAT CHANGE : ");
+            Serial.println(digitalRead(16));
+            // Serial.print("BAT FULL : ");
+            // Serial.println(analogRead(39));
+
+            // Serial.print("rout_taskcode WDT STATUS : ");
+            // Serial.println(esp_task_wdt_status(NULL));
             
             //showallbool();
             //showrecord();
@@ -271,7 +286,7 @@ void rout_taskcode(void *parameter)
             // // Serial.printf("before update");
 
             //if(bat >= highvolt) wifiAPServer_routine();
-            if(bat > highvolt && bootCount == 1) 
+            if(bat >= highvolt && bootCount == 1) 
             {
                 wifiAPServer_routine();
                 webSocketMeasureInfo();

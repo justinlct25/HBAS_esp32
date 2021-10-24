@@ -33,7 +33,7 @@ void led_operate(){
     else{
       yellowled.setOperatation(LED_ON);
     }
-    if(!digitalRead(16) || bat > highvolt)
+    if(!digitalRead(16))
     {
       digitalWrite(GPIO_NUM_19, LOW);
     }
