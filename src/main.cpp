@@ -54,12 +54,12 @@ unsigned long previousMillis1 = 0;
 const long interval = 1000; //1 second
 
 unsigned long previousLoraAMsgMillis = 0;
-// long LoraAMsginterval = 30000; //30 seconds
+// long LoraAMsginterval = 30000; //30 seconds33
 long LoraAMsginterval = 20000; //30 seconds
 
 unsigned long previousLoraBMsgMillis = 0;
 long LoraBMsginterval = 300000; //5 minutes
-// long LoraBMsginterval = 60000; //
+// long LoraBMsginterval = 30000; //
 
 unsigned long previousLoraMsgMillis = 0;
 long LoraMsginterval = 45000; //
@@ -77,7 +77,8 @@ void setup()
     Serial2.begin(9600, SERIAL_8N1, 32, 33); //serial for gps
     lora.begin(9600);                        //serial for lora
     delay(2000);                             //2s delay for lora initialize (should use)
-    //lora_AT_init();
+    
+    //if(!digitalRead(16))lora_AT_init();
     
     buzzer_init();
     tof_init();
@@ -86,9 +87,10 @@ void setup()
     //new
     //if(!issleep) gps_init();
     //gps_init();
-    if(bootCount == 0 && bat > highvolt && issleep == false && !digitalRead(16)) 
+    if(bootCount == 0 && issleep == false && !digitalRead(16)) 
     {
-        gps_coolstart();//20-40s +
+        //gps_coolstart();//20-40s +
+        gps_warmstart();
     }
     else 
     {
@@ -286,7 +288,7 @@ void rout_taskcode(void *parameter)
             // // Serial.printf("before update");
 
             //if(bat >= highvolt) wifiAPServer_routine();
-            if(bat >= highvolt && bootCount == 1) 
+            if(bootCount == 1) 
             {
                 wifiAPServer_routine();
                 webSocketMeasureInfo();

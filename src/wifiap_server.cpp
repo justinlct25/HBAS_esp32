@@ -391,7 +391,7 @@ void wifiAPServer_routine(){
     WiFi.softAPdisconnect(true);
     wifi_inited = false;
   }
-  if(bat < highvolt)
+  if(bootCount > 1)
   {
     WiFi.softAPdisconnect(true);
     wifi_inited = false;

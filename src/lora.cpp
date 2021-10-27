@@ -161,7 +161,7 @@ void lora_rountine(){
             lora.print("AT+CMSG\r\n");
             delay(5);
             lora.print("AT+MSG\r\n");
-            //delay(5);
+            delay(5);
             //Serial.println("reflash lora");
         }
 
@@ -205,7 +205,7 @@ void nsendloracmsg(char *msg){
 void lora_getpayload()
 {
     lora.printf("AT+LW=LEN\r\n");
-    //delay(5);
+    delay(5);
 }
 // void checklorarssi(){
 //     lora.printf("AT+TEST=RSSI");
@@ -242,6 +242,7 @@ void printfb(int line){
     String data = lora.readStringUntil('\n');
     Serial.println(data);
   }
+  delay(10);
 }
 
 void lora_AT_init()

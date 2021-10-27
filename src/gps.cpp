@@ -35,7 +35,8 @@ void gps_init()
 void gps_coolstart()
 {
     // = reset
-    Serial2.print("$PMTK104*37\r\n");
+    //Serial2.print("$PMTK104*37\r\n");//full cool
+    Serial2.print("$PMTK103*30\r\n");
     Serial.println("********* GPS COOL START *********");
 }
 

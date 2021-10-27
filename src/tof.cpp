@@ -30,7 +30,7 @@ void getdistance(){
     else{
         distance = -1;
         //reset
-        Serial.print("tof reset");
+        Serial.println("tof reset");
         digitalWrite(23, LOW);
         digitalWrite(23, HIGH);
         tof_init();
