@@ -50,6 +50,11 @@ void deepsleep_handler()
 	if (issleep)
 	{
 		//new 
+		if (bat <= 3.6)
+		{
+			esp_sleep_enable_ext0_wakeup(GPIO_NUM_36, HIGH);
+			esp_deep_sleep_start();
+		}
 		if (!digitalRead(16))
 		{
 			Serial.print("Leave deep sleep mode\r\n");
@@ -146,6 +151,8 @@ void deepsleep_routine()
 void routine_low_battery_sleep(int sleep_time)
 {
 	gps_standby();
+	lora_sleep();
+	
 	Serial.printf("Setup ESP32 to sleep for every %i Seconds\r\n", sleep_time);
 	issleep = true;
 	esp_sleep_enable_ext0_wakeup(GPIO_NUM_36, HIGH);

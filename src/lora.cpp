@@ -80,7 +80,7 @@ void lora_rountine(){
                     strstr(input,"+JOIN: Join") !=NULL || 
                     strstr(input,"Join failed") !=NULL || 
                     strstr(input,"failed") !=NULL ){
-            isjoin = false;
+            isjoin == true ? isjoin = true : isjoin = false;
         }
         if( strstr(input,"+JOIN: Done") !=NULL || 
             strstr(input,"+JOIN: Joined already") !=NULL || 
@@ -100,8 +100,8 @@ void lora_rountine(){
             strstr(input,"+CMSG: Wait ACK") !=NULL ||
             strstr(input,"Wait ACK") !=NULL ||
             strstr(input,"+CMSG: Wait") !=NULL){
-            recordCounterB++;
-            recordCounterS++;
+            //recordCounterB++;
+            //recordCounterS++;
         }
         if( strstr(input,"+CMSG: ACK Received")!=NULL || 
             strstr(input,"+CMSG: ACK")!=NULL || 
@@ -177,7 +177,7 @@ void lora_rountine(){
 void njoinlora(){
     //lora.print("AT+JOIN\r\n");
     lora.print("AT+JOIN\r\n");
-    delay(5);
+    //delay(5);
     //lora.flush();
     //isjoin = false;
     joining = true;
@@ -186,7 +186,7 @@ void njoinlora(){
 void nsendloramsg(char *msg){
     //lora_getpayload();
     lora.printf("AT+CMSG=\"%s\"\r\n",msg);
-    delay(5);
+    //delay(5);
     //lora.flush();
     //umsging = true;
     isackb = false;
@@ -196,7 +196,7 @@ void nsendloramsg(char *msg){
 void nsendloracmsg(char *msg){
     //lora_getpayload();
     lora.printf("AT+CMSG=\"%s\"\r\n",msg);
-    delay(5);
+    //delay(5);
     //lora.flush();
     isack = false;
     cmsging = true;
@@ -205,6 +205,24 @@ void nsendloracmsg(char *msg){
 void lora_getpayload()
 {
     lora.printf("AT+LW=LEN\r\n");
+    delay(5);
+}
+
+void lora_reset()
+{
+    lora.printf("AT+RESET\r\n");
+    delay(5);
+}
+
+void lora_sleep()
+{
+    lora.printf("AT+LOWPOWER\r\n");
+    delay(5);
+}
+
+void lora_wakeup()
+{
+    lora.printf("A\r\n");
     delay(5);
 }
 // void checklorarssi(){

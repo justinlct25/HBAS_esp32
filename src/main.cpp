@@ -59,7 +59,7 @@ long LoraAMsginterval = 20000; //30 seconds
 
 unsigned long previousLoraBMsgMillis = 0;
 long LoraBMsginterval = 300000; //5 minutes
-// long LoraBMsginterval = 30000; //
+// long LoraBMsginterval = 20000; //
 
 unsigned long previousLoraMsgMillis = 0;
 long LoraMsginterval = 45000; //
@@ -77,8 +77,12 @@ void setup()
     Serial2.begin(9600, SERIAL_8N1, 32, 33); //serial for gps
     lora.begin(9600);                        //serial for lora
     delay(2000);                             //2s delay for lora initialize (should use)
-    
-    //if(!digitalRead(16))lora_AT_init();
+
+    lora_wakeup();
+    // lora_reset();
+    // delay(2000);
+
+    // if(!digitalRead(16))lora_AT_init();
     
     buzzer_init();
     tof_init();
@@ -87,10 +91,10 @@ void setup()
     //new
     //if(!issleep) gps_init();
     //gps_init();
-    if(bootCount == 0 && issleep == false && !digitalRead(16)) 
+    if(bootCount == 0 && !digitalRead(16)) 
     {
-        //gps_coolstart();//20-40s +
-        gps_warmstart();
+        gps_coolstart();//20-40s +
+        //gps_warmstart();
     }
     else 
     {
@@ -187,6 +191,7 @@ void loop()
         //B發送中 && cmsgb沒有發送中 && B發送成功
         if ((bmsging && !cmsgingb) && bmsgsuc)
         {
+            recordCounterB = 0;
             bmsging = false;
             bmsgsuc = false;
         }//B發送中 && cmsgb沒有發送中 && B發送不成功
@@ -210,8 +215,6 @@ void init()
     pinMode(17, OUTPUT);    //All module power supply
     digitalWrite(17, HIGH); //pull up
     pinMode(16, INPUT_PULLUP);     //battery charging signal
-
-    //pinMode(39, ANALOG); //bat STDBY
 
     //open MPU6050/Radar Power
     pinMode(GPIO_NUM_2, OUTPUT);
@@ -269,8 +272,8 @@ void rout_taskcode(void *parameter)
             showtof();
             Serial.print("BAT CHANGE : ");
             Serial.println(digitalRead(16));
-            // Serial.print("BAT FULL : ");
-            // Serial.println(analogRead(39));
+            Serial.print("ISJOIN : ");
+            Serial.println(isjoin);
 
             // Serial.print("rout_taskcode WDT STATUS : ");
             // Serial.println(esp_task_wdt_status(NULL));
@@ -293,6 +296,11 @@ void rout_taskcode(void *parameter)
                 wifiAPServer_routine();
                 webSocketMeasureInfo();
                 webSocketLoggerInfo();
+            //     Serial.println(WiFi.status());
+            }else
+            {
+                WiFi.softAPdisconnect(true);
+                wifi_inited = false;
             }
 
             //mqtt monitor
