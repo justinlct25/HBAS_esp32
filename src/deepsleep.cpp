@@ -84,7 +84,7 @@ void deepsleep_handler()
 					if (i == 4) isjoin = true;
 				}
 			}
-			//Serial.printf("isjoin: %i\r\n", isjoin);
+			Serial.printf("isjoin: %i\r\n", isjoin);
 
 			if (isjoin) {
 				Serial.println("Startup low battery deep sleep triggered with SUCCESS lora join");

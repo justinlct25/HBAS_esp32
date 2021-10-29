@@ -80,13 +80,19 @@ void lora_rountine(){
                     strstr(input,"+JOIN: Join") !=NULL || 
                     strstr(input,"Join failed") !=NULL || 
                     strstr(input,"failed") !=NULL ){
-            isjoin == true ? isjoin = true : isjoin = false;
+            isjoin = false;
         }
         if( strstr(input,"+JOIN: Done") !=NULL || 
             strstr(input,"+JOIN: Joined already") !=NULL || 
             strstr(input,"Joined") !=NULL || 
             strstr(input,"already") !=NULL || LORABUSY){
             joining = false;
+        }
+        if( strstr(input,"+CMSG: Please") !=NULL || 
+            strstr(input,"Please join") !=NULL || 
+            strstr(input,"join network") !=NULL || 
+            strstr(input,"network first") !=NULL){
+            isjoin = false;
         }
 
         // //umsg
@@ -119,7 +125,7 @@ void lora_rountine(){
             cmsgingb = false;
             isack = false;
             isackb = false;
-            isjoin = true;
+            //isjoin = true;
         }
         
         //Done
