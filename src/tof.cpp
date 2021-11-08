@@ -6,6 +6,7 @@ uint16_t raw_distance;
 
 int eightoneeight_count = 0;
 
+int tof_count;
 
 void tof_init(){
   tof.init();
@@ -16,21 +17,20 @@ void getdistance(){
     raw_distance = tof.readRangeSingleMillimeters();
     if(raw_distance <= 8191 && raw_distance > 0){
         distance=(raw_distance-10)/10; //in cm with 10mm error
-        // if(distance==818){
-        //   eightoneeight_count++;
-        // }
-        // if(eightoneeight_count>30){
-        //   eightoneeight_count=0;
-        //   Serial.print("reset");
-        //   digitalWrite(23, LOW);
-        //   digitalWrite(23, HIGH);
-        //   tof.init();
-        // }
+        if(++tof_count >= 10)
+        {
+          tof_count = 0;
+          //reset
+          Serial.println("818 tof reset");
+          digitalWrite(23, LOW);
+          digitalWrite(23, HIGH);
+          tof_init();
+        }
     }
     else{
         distance = -1;
         //reset
-        Serial.println("tof reset");
+        Serial.println("-1 tof reset");
         digitalWrite(23, LOW);
         digitalWrite(23, HIGH);
         tof_init();

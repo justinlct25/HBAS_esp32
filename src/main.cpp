@@ -58,7 +58,7 @@ unsigned long previousLoraAMsgMillis = 0;
 long LoraAMsginterval = 20000; //30 seconds
 
 unsigned long previousLoraBMsgMillis = 0;
-long LoraBMsginterval = 300000; //5 minutes
+long LoraBMsginterval = 600000; //5 minutes
 // long LoraBMsginterval = 20000; //
 
 unsigned long previousLoraMsgMillis = 0;
@@ -228,7 +228,7 @@ void init()
     digitalWrite(23, HIGH);
 
     
-    Serial.begin(115200);
+    Serial.begin(115200);  
 }
 
 void rout_taskcode(void *parameter)

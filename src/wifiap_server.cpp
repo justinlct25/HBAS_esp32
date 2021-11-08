@@ -1,7 +1,7 @@
 #include "wifiap_server.h"
 #include <AsyncElegantOTA.h>
 
-unsigned long quit_time_wifiap = 300000UL; // 5 minutes
+unsigned long quit_time_wifiap = 600000UL; // 5 minutes
 
 const char* APip = "0.0.0.0";
 
