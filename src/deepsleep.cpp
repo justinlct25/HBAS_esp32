@@ -55,7 +55,7 @@ void deepsleep_handler()
 			esp_sleep_enable_ext0_wakeup(GPIO_NUM_36, HIGH);
 			esp_deep_sleep_start();
 		}
-		if (!digitalRead(16))
+		if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_EXT0)
 		{
 			Serial.print("Leave deep sleep mode\r\n");
 			issleep = false;
