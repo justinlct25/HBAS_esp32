@@ -1,7 +1,7 @@
 #include "wifiap_server.h"
 #include <AsyncElegantOTA.h>
 
-unsigned long quit_time_wifiap = 600000UL; // 5 minutes
+unsigned long quit_time_wifiap = 6000000UL; // 50 minutes
 
 const char* APip = "0.0.0.0";
 
@@ -16,6 +16,7 @@ const char* PARAM_ANGLE = "inputAngle";
 const char* PARAM_WIFISSID = "inputWifiSsid";
 const char* PARAM_WIFIPW = "inputWifiPw";
 const char* PARAM_UPDATESERVERURL = "inputServerUrl";
+const char* PARAM_ANGLETHRESHOLD = "angleThreshold";
 
 const char index_html[] PROGMEM = R"rawliteral(
 <!DOCTYPE HTML>
@@ -51,12 +52,7 @@ const char index_html[] PROGMEM = R"rawliteral(
     <div id="currentAngle"></div> 
     <h3>System Status Log</h3>
     <textarea id="systemLogger" style="width:100%;height:50%;"></textarea>
-    <h3>Wifi STA-mode OTA Update Setting: </h3>
-    <div id="updateConfigContainer">
-        %CURRENTSTAOTACONFIG%
-        <button id="editUpdateConfig">Edit</button>
-    </div>
-
+    
   </body>
   <script>
     const statusGateway = `ws://${window.location.hostname}/statusSocket`;
@@ -128,8 +124,18 @@ const char index_html[] PROGMEM = R"rawliteral(
       let config = event.data.split(',');
       let distance = config[0].split(':')[1];
       let angle = config[1].split(':')[1];
-      document.getElementById('configContainer').innerHTML = `<div>Distance: ${distance} cm</div><div>Angle: ${angle} deg</div><button id="editConfig">EDIT</button>`;
-        document.getElementById("editConfig").onclick = editConfigButtonEvent;
+      let angleThreshold = config[2].split(':')[1];
+      let thresholdSign = ""
+      if(angleThreshold=="smaller"){
+        thresholdSign = "<";
+      }else{
+        thresholdSign = ">";
+      }
+      document.getElementById('configContainer').innerHTML = `
+      <div>Distance: ${distance} cm</div>
+      <div>Angle: ${thresholdSign} ${angle} deg</div>
+      <button id="editConfig">EDIT</button>`;
+      document.getElementById("editConfig").onclick = editConfigButtonEvent;
     }
     function onMeasureMessage(event){
         let measure = event.data.split(',');
@@ -160,7 +166,10 @@ const char index_html[] PROGMEM = R"rawliteral(
         document.getElementById("configContainer").innerHTML=`
             <form action="/paramconfig" target="hidden-form">
                 Distance: <input type="text" name="inputDistance">(in cm)<br>
-                Angle : <input type="number " name="inputAngle">(in deg)<br>
+                Angle : <br>
+                <input type="radio" name="angleThreshold" value="smaller">Angle smaller than<br>
+                <input type="radio" name="angleThreshold" value="larger">Angle larger than<br>
+                <input type="number " name="inputAngle">(in deg)<br>
                 <input type="submit" value="Submit" onclick="submitMessage()">
             </form>`
     }
@@ -219,7 +228,12 @@ String processor(const String& var){
         String configs = "";
         configs += "<div>Distance: ";
         configs += lim_distance;
-        configs += " cm</div><div> Angle: ";
+        configs += " cm</div><div> Angle : ";
+        if(smallerbrakeangle){
+          configs += "< ";
+        }else{
+          configs += "> ";
+        };
         configs += lim_angle;
         configs += " deg</div>";
         return configs;
@@ -299,11 +313,15 @@ void wifiAPServer_init(){
       int tempAngle;
       bool validDistance = false;
       bool validAngle = false;
+      String angleThreshold;
       Serial.println("config");
       // GET inputString value on <ESP_IP>/config?inputString=<inputMessage>
       if ((request->hasParam(PARAM_DISTANCE))&&(request->hasParam(PARAM_ANGLE))) {
         tempDistance = atof((request->getParam(PARAM_DISTANCE)->value()).c_str());
         tempAngle = atof((request->getParam(PARAM_ANGLE)->value()).c_str());
+        angleThreshold = request->getParam(PARAM_ANGLETHRESHOLD)->value().c_str();
+        Serial.println("angleThreshold:");
+        Serial.println(angleThreshold);
         if(tempDistance>0){validDistance=true;}
         if(tempAngle>0&&tempAngle<=360){validAngle=true;}
         if(validDistance && validAngle){
@@ -311,9 +329,15 @@ void wifiAPServer_init(){
           lim_angle = tempAngle;
           NVS.setInt("lim_distance",tempDistance);
           NVS.setInt("lim_angle",tempAngle);
+          NVS.setString("angleThreshold", angleThreshold);
+          if(angleThreshold == "smaller"){
+            smallerbrakeangle = 1;
+          }else if(angleThreshold == "larger"){
+            smallerbrakeangle = 0;
+          }
           request->send(200, "text/text", "config successfully updated");
           SerialPrintLimitDistanceAngle();
-          configSocket.textAll("distance:"+String(lim_distance)+",angle:"+String(lim_angle));
+          configSocket.textAll("distance:"+String(lim_distance)+",angle:"+String(lim_angle)+",angleThreshold:"+angleThreshold);
         }else if(!validDistance){
           request->send(200, "text/text", "invalid distance");
         }else if(!validAngle){
@@ -324,29 +348,29 @@ void wifiAPServer_init(){
         request->send(200, "text/text", "incomplete configuration");
       }
     });
-    server.on("/updateconfig", HTTPP_GET, [] (AsyncWebServerRequest *request) {
-        if((request->hasParam(PARAM_WIFISSID))&&(request->hasParam(PARAM_WIFIPW))&&(request->hasParam(PARAM_UPDATESERVERURL))){
-            // wifi_ssid = (request->getParam(PARAM_WIFISSID)->value())c_str();
-            sprintf(wifi_ssid, "%s", (request->getParam(PARAM_WIFISSID)->value()));
-            NVS.setString("wifi_ssid", (request->getParam(PARAM_WIFISSID)->value()));
-            // wifi_password = (request->getParam(PARAM_WIFIPW)->value()).c_str();
-            sprintf(wifi_password, "%s", (request->getParam(PARAM_WIFIPW)->value()));
-            NVS.setString("wifi_password", (request->getParam(PARAM_WIFIPW)->value()));
-            String nvs_url = (request->getParam(PARAM_UPDATESERVERURL)->value());
-            // Serial.println("take");
-            // Serial.println(nvs_url);
-            NVS.setString("server_url", nvs_url);
-            sprintf(update_server_url, "%s", nvs_url);
-            // sprintf(update_server_url, "%s", nvs_url);
-            // update_server_url = (char* )nvs_url.c_str();
-            sprintf(version_url, "http://%s/version",nvs_url);
-            sprintf(bin_url, "http://%s/bin/",nvs_url);
-            request->send(200, "text/text", "device id set");
-            statusSocket.textAll(String(device_id));
-        } else{
-            request->send(200, "text/text", "incomplete configuration");
-        }
-    });
+    // server.on("/updateconfig", HTTPP_GET, [] (AsyncWebServerRequest *request) {
+    //     if((request->hasParam(PARAM_WIFISSID))&&(request->hasParam(PARAM_WIFIPW))&&(request->hasParam(PARAM_UPDATESERVERURL))){
+    //         // wifi_ssid = (request->getParam(PARAM_WIFISSID)->value())c_str();
+    //         sprintf(wifi_ssid, "%s", (request->getParam(PARAM_WIFISSID)->value()));
+    //         NVS.setString("wifi_ssid", (request->getParam(PARAM_WIFISSID)->value()));
+    //         // wifi_password = (request->getParam(PARAM_WIFIPW)->value()).c_str();
+    //         sprintf(wifi_password, "%s", (request->getParam(PARAM_WIFIPW)->value()));
+    //         NVS.setString("wifi_password", (request->getParam(PARAM_WIFIPW)->value()));
+    //         String nvs_url = (request->getParam(PARAM_UPDATESERVERURL)->value());
+    //         // Serial.println("take");
+    //         // Serial.println(nvs_url);
+    //         NVS.setString("server_url", nvs_url);
+    //         sprintf(update_server_url, "%s", nvs_url);
+    //         // sprintf(update_server_url, "%s", nvs_url);
+    //         // update_server_url = (char* )nvs_url.c_str();
+    //         sprintf(version_url, "http://%s/version",nvs_url);
+    //         sprintf(bin_url, "http://%s/bin/",nvs_url);
+    //         request->send(200, "text/text", "device id set");
+    //         statusSocket.textAll(String(device_id));
+    //     } else{
+    //         request->send(200, "text/text", "incomplete configuration");
+    //     }
+    // });
     server.onNotFound(notFound);
     server.begin();
     //AsyncElegantOTA.begin(&server);

@@ -88,6 +88,7 @@ void lora_rountine(){
             strstr(input,"already") !=NULL || LORABUSY){
             joining = false;
         }
+        //?
         if( strstr(input,"+CMSG: Please") !=NULL || 
             strstr(input,"Please join") !=NULL || 
             strstr(input,"join network") !=NULL || 
@@ -185,7 +186,7 @@ void njoinlora(){
     lora.print("AT+JOIN\r\n");
     //delay(5);
     //lora.flush();
-    //isjoin = false;
+    //isjoin = false;?
     joining = true;
 }
 

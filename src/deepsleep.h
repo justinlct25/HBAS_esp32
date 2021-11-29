@@ -19,10 +19,10 @@
 #define long_sleep_time  3600UL                             // for testing
 // #define lowvolt 3.5
 // #define highvolt 3.58
-// #define lowvolt 3.9
-// #define highvolt 4.1
-#define lowvolt 4.5
-#define highvolt 4.58
+#define lowvolt 3.9
+#define highvolt 4.1
+// #define lowvolt 4.5
+// #define highvolt 4.58
 
 //#define charge_interval 1000 * 60 * 10
 // #define charge_interval 300000	                        // for testing

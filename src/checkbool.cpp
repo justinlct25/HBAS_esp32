@@ -7,6 +7,8 @@ bool isperson = false;
 bool isbrake = false;
 bool isalert = false;
 
+bool smallerbrakeangle = true;
+
 // device id
 int device_id = 3;
 
@@ -33,6 +35,12 @@ void getNVSConfig(){
   if(temp_lim_angle>0){
     lim_angle = temp_lim_angle;
   };
+  String tempThreshold = NVS.getString("angleThreshold");
+  if (tempThreshold == "smaller"){
+    smallerbrakeangle = 1;
+  }else if (tempThreshold == "larger"){
+    smallerbrakeangle = 0;
+  }
   String tempSsid = NVS.getString("wifi_ssid");
   sprintf(wifi_ssid, "%s", tempSsid);
   String tempPw = NVS.getString("wifi_password");
@@ -58,7 +66,7 @@ void person()
 
 void checkrot2()
 {
-  if (stickrot < lim_angle)
+  if ((smallerbrakeangle && (stickrot < lim_angle)) || (!smallerbrakeangle && (stickrot > lim_angle)))
   {
     isbrake = false;
     if (!isperson && !isbrake)

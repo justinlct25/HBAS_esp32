@@ -82,7 +82,7 @@ void setup()
     // lora_reset();
     // delay(2000);
 
-    // if(!digitalRead(16))lora_AT_init();
+    //lora_AT_init();
     
     buzzer_init();
     tof_init();
@@ -191,7 +191,7 @@ void loop()
         //B發送中 && cmsgb沒有發送中 && B發送成功
         if ((bmsging && !cmsgingb) && bmsgsuc)
         {
-            recordCounterB = 0;
+            recordCounterB = 0; //?
             bmsging = false;
             bmsgsuc = false;
         }//B發送中 && cmsgb沒有發送中 && B發送不成功
