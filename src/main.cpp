@@ -16,7 +16,7 @@
 #include "mqtt.h"
 //#include "radar.h"
 #include "led.h"
-//#include <esp_task_wdt.h>
+#include <esp_task_wdt.h>
 //#include <ESPmDNS.h>
 #include "bluetooth.h"
 #include "deepsleep.h"
@@ -33,38 +33,43 @@ TaskHandle_t task1;
 //task
 TaskHandle_t rout_task;
 void rout_taskcode(void *);
-TaskHandle_t lora_task_a;
-void lora_task_acode(void *);
-TaskHandle_t lora_task_b;
-void lora_task_bcode(void *);
+//TaskHandle_t lora_task_a;
+void lora_task_acode();
+//TaskHandle_t lora_task_b;
+void lora_task_bcode();
 
 //Queue record
 bool alerted = false;
 #define maxrecord 500 //up to 1000
 #define maxbuffer 60
 int recordCounter = 0;
+int recordCounterB = 0;
+int recordCounterS = 0;
 char arecord[maxrecord][maxbuffer];
 char bmsg[maxbuffer];
 
 //Important Timer
 unsigned long previousMillis = 0;
+unsigned long previousMillis1 = 0;
 const long interval = 1000; //1 second
 
 unsigned long previousLoraAMsgMillis = 0;
-long LoraAMsginterval = 30000; //30 seconds
+// long LoraAMsginterval = 30000; //30 seconds33
+long LoraAMsginterval = 20000; //30 seconds
 
 unsigned long previousLoraBMsgMillis = 0;
-long LoraBMsginterval = 300000; //5 minutes
+long LoraBMsginterval = 600000; //5 minutes
 // long LoraBMsginterval = 20000; //
 
+unsigned long previousLoraMsgMillis = 0;
+long LoraMsginterval = 45000; //
 
 void init();
 
 void setup()
 {
-    //watchdog
-    // esp_task_wdt_init(60, true); //enable panic so ESP32 restarts
-    // esp_task_wdt_add(NULL); //add current thread to WDT watch
+    esp_task_wdt_init(60, true); //enable panic so ESP32 restarts
+    // esp_task_wdt_add(NULL); //add current thread to WDT watc
     init();
     bat_init();
 
@@ -72,52 +77,136 @@ void setup()
     Serial2.begin(9600, SERIAL_8N1, 32, 33); //serial for gps
     lora.begin(9600);                        //serial for lora
     delay(2000);                             //2s delay for lora initialize (should use)
+
+    lora_wakeup();
+    // lora_reset();
+    // delay(2000);
+
+    //lora_AT_init();
+    
     buzzer_init();
     tof_init();
     gyro_init();
-    
-    // get config from NVS
-    getNVSConfig();
-    delay(500);
 
+    //new
+    //if(!issleep) gps_init();
+    //gps_init();
+    if(bootCount == 0 && !digitalRead(16)) 
+    {
+        gps_coolstart();//20-40s +
+        //gps_warmstart();
+    }
+    else 
+    {
+        gps_hotstart();//5s +
+    }
+    //gps_hotstart();
+    
     //Networking initialization
-    wifi_init();
+    //wifi_init();
     //mqtt_init();
     //bt_init();
     //njoinlora();
 
-
-    // wifiapserver
-    // if(bat >= highvolt){
-    //     wifiAPServer_init();
-    //     wifi_inited = true;
-    // }
-
     //core (legacy function)
     //xTaskCreatePinnedToCore(task1code,"task1",10000,NULL,0,&task1,0);
+    // Serial.println("issleep2:");
+	// Serial.println(issleep);
 
     deepsleep_handler();
-    //Assign routine task
+
+    // get config from NVS
+    getNVSConfig();
+    delay(500);
+    //Assign routine task 5K Byte overflow?
     xTaskCreate(rout_taskcode, "rout_task", 5000, NULL, 2, &rout_task);
     //xTaskCreate(lora_task_acode, "lora_task_a", 5000, NULL, 1, &lora_task_a);
-
-    //tof xshut io (may not need)
-    pinMode(23, OUTPUT);
-    digitalWrite(23, HIGH);
 }
 
 void loop()
 {
+    //watchdog
+    // esp_task_wdt_init(30, true); //enable panic so ESP32 restarts
+    esp_task_wdt_add(NULL); //add current thread to WDT watc
+    esp_task_wdt_reset();
+
     //Handle lora transmission status
     lora_rountine();
-    // wifista_update();
 
-    if(bat < 3.5){
-        pinMode(3, OUTPUT);
-    }
-    else{
-        pinMode(3, INPUT);
-    }
+    tinygps();
+    // wifista_update();
+    // deepsleep_routine();
+
+        //Quene Amsg
+        if (isalert && !alerted)
+        {
+            strcpy(arecord[recordCounter], encode_cmsg('A'));
+            if(recordCounter < 2) recordCounter++;
+            alerted = true;
+        }
+        if (!isalert && alerted)
+        {
+            alerted = false;
+        }
+
+        //lora task a
+        if (millis() - previousLoraAMsgMillis >= LoraAMsginterval)
+        {
+            previousLoraAMsgMillis = millis();
+            //xTaskCreate(lora_task_acode, "lora_task_a", 5000, NULL, 2, &lora_task_a);
+            lora_task_acode();
+        }
+
+        //lora task b
+        if (millis() - previousLoraBMsgMillis >= LoraBMsginterval)
+        {
+            previousLoraBMsgMillis = millis();
+            recordCounterB = 1;//start send b
+            //xTaskCreate(lora_task_bcode, "lora_task_b", 5000, NULL, 2, &lora_task_b);
+            lora_task_bcode();
+            previousLoraMsgMillis = millis();
+        }
+
+        //repeat b
+        if (millis() - previousLoraMsgMillis >= LoraMsginterval)
+        {
+            previousLoraMsgMillis = millis();
+            lora_task_bcode();
+        }
+
+        //check amsg stauts
+        if ((amsging && !cmsging) && amsgsuc)
+        {
+            memset(arecord[recordCounter], '\0', sizeof(arecord[recordCounter])); //may not need
+            recordCounter--;
+            amsging = false;
+            amsgsuc = false;
+        }
+        else if ((amsging && !cmsging) && !amsgsuc)
+        {
+            amsging = false;
+        }
+
+        //check bmsg status
+        //B發送中 && cmsgb沒有發送中 && B發送成功
+        if ((bmsging && !cmsgingb) && bmsgsuc)
+        {
+            recordCounterB = 0; //?
+            bmsging = false;
+            bmsgsuc = false;
+        }//B發送中 && cmsgb沒有發送中 && B發送不成功
+        else if ((bmsging && !cmsgingb) && !bmsgsuc)
+        {
+            bmsging = false;
+        }
+
+        //current WDT status
+        // if (millis() - previousMillis1 >= interval)
+        // {
+        //     previousMillis1 = millis();
+        //     Serial.print("loop WDT STATUS : ");
+        //     Serial.println(esp_task_wdt_status(NULL));
+        // }
 }
 
 void init()
@@ -125,16 +214,29 @@ void init()
     //very important
     pinMode(17, OUTPUT);    //All module power supply
     digitalWrite(17, HIGH); //pull up
-    pinMode(16, INPUT);     //battery charging signal
-    //reset tof pin
+    pinMode(16, INPUT_PULLUP);     //battery charging signal
+
+    //open MPU6050/Radar Power
+    pinMode(GPIO_NUM_2, OUTPUT);
+    digitalWrite(GPIO_NUM_2, HIGH);
+    // //Red LED PIN INIT
+    pinMode(GPIO_NUM_19, OUTPUT);
+    digitalWrite(GPIO_NUM_19, HIGH);
+
+    // //tof xshut io (may not need)
     pinMode(23, OUTPUT);
-    Serial.begin(115200);
+    digitalWrite(23, HIGH);
+
+    
+    Serial.begin(115200);  
 }
 
 void rout_taskcode(void *parameter)
 {
     for (;;)
     {
+        esp_task_wdt_add(NULL); //add current thread to WDT watc
+        esp_task_wdt_reset();
         if (millis() - previousMillis >= interval)
         {
         //     Serial.print("NVS.getString(latitude)");
@@ -154,12 +256,13 @@ void rout_taskcode(void *parameter)
             person();
             checkrot2();
             samplebattery();
-            tinygps();
+
+            // tinygps();
 
             //Debug printing
             //Serial.print("\f");  //new page for some serial monitor
             //Serial.printf(">>>>>> run on core %d  stack: %d\r\n",xPortGetCoreID(),uxTaskGetStackHighWaterMark(NULL));
-            Serial.printf("-------------uptime: %s-------------\r\n", getuptime());
+            Serial.printf("---------uptime: %s----bootCount: %i---------\r\n", getuptime(),bootCount);
             showgpsinfo();
             showbattery();
             //Serial.printf("wifi status: %d , RSSI: %d\r\n",wifi_stat(),wifi_strength());
@@ -167,19 +270,38 @@ void rout_taskcode(void *parameter)
             //showstatus();
             showgyro();
             showtof();
-            showallbool();
-            showrecord();
+            Serial.print("BAT CHANGE : ");
+            Serial.println(digitalRead(16));
+            Serial.print("ISJOIN : ");
+            Serial.println(isjoin);
+
+            // Serial.print("rout_taskcode WDT STATUS : ");
+            // Serial.println(esp_task_wdt_status(NULL));
+            
+            //showallbool();
+            //showrecord();
             //showversion();
             //showi2cstate();
             //showi2cdev();
-            //utctime();
-            Serial.printf("amsg timer: %s\r\n", gettimer(previousLoraAMsgMillis));
-            Serial.printf("bmsg timer: %s\r\n", gettimer(previousLoraBMsgMillis));
-            showlora();
+            // //utctime();
+            // Serial.printf("amsg timer: %s\r\n", gettimer(previousLoraAMsgMillis));
+            // Serial.printf("bmsg timer: %s\r\n", gettimer(previousLoraBMsgMillis));
+            // showlora();
 
-            // Serial.printf("before update");
+            // // Serial.printf("before update");
 
-            wifiAPServer_routine();
+            //if(bat >= highvolt) wifiAPServer_routine();
+            if(bootCount == 1) 
+            {
+                wifiAPServer_routine();
+                webSocketMeasureInfo();
+                webSocketLoggerInfo();
+            //     Serial.println(WiFi.status());
+            }else
+            {
+                WiFi.softAPdisconnect(true);
+                wifi_inited = false;
+            }
 
             //mqtt monitor
             //mqttpub();
@@ -195,8 +317,8 @@ void rout_taskcode(void *parameter)
             buz_operate(); //buzzer
 
             // send websocket info
-            webSocketMeasureInfo();
-            webSocketLoggerInfo();
+            // webSocketMeasureInfo();
+            // webSocketLoggerInfo();
 
 
             // Serial.println(wifi_ssid);
@@ -218,70 +340,28 @@ void rout_taskcode(void *parameter)
         buz.cbuz_routine();
         blueled.cled_routine();
         yellowled.cled_routine();
-
-        //Quene Amsg
-        if (isalert && !alerted)
-        {
-            strcpy(arecord[recordCounter], encode_cmsg('A'));
-            recordCounter++;
-            alerted = true;
-        }
-        if (!isalert && alerted)
-        {
-            alerted = false;
-        }
-
-        //lora task a
-        if (millis() - previousLoraAMsgMillis >= LoraAMsginterval)
-        {
-            xTaskCreate(lora_task_acode, "lora_task_a", 5000, NULL, 2, &lora_task_a);
-            previousLoraAMsgMillis = millis();
-        }
-
-        //lora task b
-        if (millis() - previousLoraBMsgMillis >= LoraBMsginterval)
-        {
-            xTaskCreate(lora_task_bcode, "lora_task_b", 5000, NULL, 2, &lora_task_b);
-            previousLoraBMsgMillis = millis();
-        }
-
-        //check amsg stauts
-        if ((amsging && !cmsging) && amsgsuc)
-        {
-            memset(arecord[recordCounter], '\0', sizeof(arecord[recordCounter])); //may not need
-            recordCounter--;
-            amsging = false;
-            amsgsuc = false;
-        }
-        else if ((amsging && !cmsging) && !amsgsuc)
-        {
-            amsging = false;
-        }
-
-        //check bmsg status
-        if ((bmsging && !umsging))
-        {
-            bmsging = false;
-        }
-
     }
 }
 
-void lora_task_acode(void *parameter)
+void lora_task_acode()
 {
     Serial.println("loratask a");
     if (!isjoin)
     {
+        //Serial.println("joining lora...");
         njoinlora();
+        //Serial.println("joined lora...");
     }
     else
     {
         //if(!joining && !cmsging && !umsging){
         if (recordCounter > 0)
         {
-            Serial.printf("Send Amsg %d\r\n", recordCounter - 1);
+            //Serial.printf("Send Amsg %d\r\n", recordCounter - 1);
+            //Serial.println("sending a msg");
             nsendloracmsg(arecord[recordCounter - 1]);
             amsging = true;
+            //Serial.println("sent a msg");
         }
         // else{ //replace amsg with bmsg if no arecord
         // Serial.println("routine LoRa battery msg sent");
@@ -295,29 +375,38 @@ void lora_task_acode(void *parameter)
         //}
     }
 
-    vTaskDelete(NULL);
+    //vTaskDelete(NULL);
 }
 
-void lora_task_bcode(void *parameter)
+void lora_task_bcode()
 {
     Serial.println("loratask b");
     if (!isjoin)
     {
+        //Serial.println("joining lora...");
         njoinlora();
+        //Serial.println("joined lora...");
     }
     else
     {
         //if(!joining && !cmsging && !umsging){
-        Serial.println("routine LoRa battery msg sent");
-        strcpy(bmsg, encode_cmsg('B'));
-        nsendloramsg(bmsg);
-        bmsging = true;
+        //Serial.println("routine LoRa battery msg sent");
+        if(recordCounterB > 0)
+        {
+            strcpy(bmsg, encode_cmsg('B'));
+            // nsendloramsg(bmsg);
+            //Serial.println("sending b msg");
+            nsendloramsg(bmsg);
+            bmsging = true;
+        }
+        //isjoin = false; // will turn true if +CMSG: Done is received (for checking if isjoin actually keeping)
+        //Serial.println("sent b msg");
     }
     //else{
     //Serial.println("LoRa module not free");
     //}
     //}
 
-    vTaskDelete(NULL);
+    //vTaskDelete(NULL);
 }
 

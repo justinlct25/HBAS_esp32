@@ -18,6 +18,8 @@ extern int lim_distance;
 extern int lim_angle;
 extern char update_server_url[200];
 
+extern bool smallerbrakeangle;
+
 
 extern void buzzer();
 

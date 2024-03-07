@@ -4,6 +4,7 @@
 #include <Arduino.h>
 #include <SoftwareSerial.h>
 #include "timeout.h"
+#include "data_tracer.h"
 
 #define LORABUSY (strstr(input,"LoRaWAN modem is busy")!=NULL)
 
@@ -21,24 +22,34 @@ extern int inn;
 extern char *ln;
 extern char *par;
 extern bool isack;
+extern bool isackb;
 
 extern bool joining;
 extern bool umsging;
 extern bool cmsging;
+extern bool cmsgingb;
 
 extern bool amsging;
 extern bool bmsging;
 
 extern bool amsgsuc;
-//extern bool bmsgsuc;
+extern bool bmsgsuc;
 
-void manuallora();
+extern RTC_DATA_ATTR int rssi;
+extern RTC_DATA_ATTR int snr;
+
+// void manuallora();
 void lora_rountine();
 void njoinlora();
-void nsendloramsg(char*);
-void nsendloracmsg(char*);
+void nsendloramsg(char *);
+void nsendloracmsg(char *);
+void lora_getpayload();
+void lora_reset();
+void lora_sleep();
+void lora_wakeup();
 void showlora();
 void lora_msginghandle();
+void lora_AT_init();
 
 //legacy
 //extern bool isretry; 

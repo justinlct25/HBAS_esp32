@@ -15,6 +15,8 @@ extern double sLat;
 extern double sLong;
 
 extern int recordCounter;
+extern int recordCounterB;
+extern int recordCounterS;
 extern char arecord[500][60];
 
 extern bool isperson;
